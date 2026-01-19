@@ -30,10 +30,9 @@ export default function NuevoServicioPage() {
 
       {pet && (
         <div className="bg-white rounded-xl p-4 shadow">
-          Mascota: {pet.name}
+          Mascota Seleccionada: <strong>{pet.name}</strong>
         </div>
       )}
     </div>
   )
 }
-  

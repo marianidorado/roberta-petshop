@@ -8,20 +8,22 @@ interface SearchClientProps {
 
 export function SearchClient({ onSelect }: SearchClientProps) {
   const clients: Client[] = [
-    {
-      id: "1",
-      name: "Ana Gómez",
-      document: "12345678",
-      pets: [],
-    },
-    {
-      id: "2",
-      name: "Carlos Pérez",
-      document: "87654321",
-      pets: [],
-    },
-  ]
-
+  {
+    id: "1",
+    name: "Ana Gómez",
+    document: "12345678",
+    pets: [
+      { id: "p1", name: "Luna", species: "dog" },
+      { id: "p2", name: "Milo", species: "cat" },
+    ],
+  },
+  {
+    id: "2",
+    name: "Carlos Pérez",
+    document: "87654321",
+    pets: [],
+  },
+]
   return (
     <div className="bg-white rounded-2xl shadow p-6 space-y-4">
       <h2 className="text-xl font-bold text-gray-800">
