@@ -1,14 +1,14 @@
 import Image from "next/image"
 import type { Pet } from "@/types/pet"
 
-const lastService = pet.lastService
-
 interface Props {
   pet: Pet
   onRepeat?: (serviceId: string) => void
 }
 
 export function PetSummary({ pet, onRepeat }: Props) {
+  const lastService = pet.lastService
+
   return (
     <div className="bg-white rounded-xl p-4 shadow space-y-4">
 
@@ -31,21 +31,19 @@ export function PetSummary({ pet, onRepeat }: Props) {
         </div>
       </div>
 
-      {pet.lastService && (
+      {onRepeat && lastService && (
         <div className="p-3 rounded-lg bg-amber-50">
           <p className="text-sm font-semibold">Último servicio</p>
           <p className="text-sm text-gray-700">
-            {pet.lastService.name} — {pet.lastService.date}
+            {lastService.name} — {lastService.date}
           </p>
-          {onRepeat && lastService && (
-            <button
-              onClick={() => onRepeat(lastService.id)}
-              className="mt-2 text-sm text-amber-600 underline"
-            >
-              Repetir este servicio
-            </button>
-          )}
 
+          <button
+            onClick={() => onRepeat(lastService.id)}
+            className="mt-2 text-sm text-amber-600 underline"
+          >
+            Repetir este servicio
+          </button>
         </div>
       )}
     </div>
