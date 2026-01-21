@@ -96,11 +96,28 @@ export default function NuevoServicioPage() {
       )}
       {/* PASO 6 */}
       {pet && (
-        <SaveServiceButton
+      <div className="pt-4">
+        <button
           disabled={services.length === 0}
-          onSave={handleSave}
-        />
-      )}
+          onClick={() => {
+            console.log({
+              client,
+              pet,
+              services,
+              notes,
+            })
+          }}
+          className={`w-full py-3 rounded-xl font-semibold text-white
+            ${
+              services.length === 0
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-amber-500 hover:bg-amber-600"
+            }`}
+        >
+          Guardar servicio
+        </button>
+      </div>
+    )}
 
     </div>
   )
