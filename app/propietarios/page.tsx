@@ -3,17 +3,32 @@ import { DashboardHeader } from "@/components/dashboard-header"
 const MOCK_OWNERS = [
   {
     id: "1",
-    name: "Ana Pérez",
+    name: "Ana",
+    lastName: "Pérez",
     document: "12345678",
+    birthDate: "1990-05-12",
+    city: "Bogotá",
+    address: "Cra 12 #45-67",
     phone: "3001234567",
-    petsCount: 2,
+    email: "ana@email.com",
+    notes: "Cliente frecuente",
+    pets: [
+      { id: "p1", name: "Luna" },
+      { id: "p2", name: "Max" },
+    ],
   },
   {
     id: "2",
-    name: "Carlos Gómez",
+    name: "Carlos",
+    lastName: "Gómez",
     document: "87654321",
+    birthDate: "1985-02-20",
+    city: "Medellín",
+    address: "Calle 8 #10-11",
     phone: "3109876543",
-    petsCount: 1,
+    email: "carlos@email.com",
+    notes: "",
+    pets: [{ id: "p3", name: "Rocky" }],
   },
 ]
 
@@ -59,16 +74,32 @@ export default function OwnersPage() {
                   key={owner.id}
                   className="border-t hover:bg-amber-50"
                 >
+                  {/* Nombre */}
                   <td className="px-4 py-3 font-medium">
-                    {owner.name}
+                    {owner.name} {owner.lastName}
                   </td>
-                  <td className="px-4 py-3">{owner.document}</td>
-                  <td className="px-4 py-3">{owner.phone}</td>
-                  <td className="px-4 py-3 text-center">
-                    {owner.petsCount}
+
+                  {/* Cédula */}
+                  <td className="px-4 py-3">
+                    {owner.document}
                   </td>
-                  <td className="px-4 py-3 text-center space-x-2">
+
+                  {/* Teléfono */}
+                  <td className="px-4 py-3">
+                    {owner.phone}
+                  </td>
+
+                  {/* Mascotas */}
+                  <td className="px-4 py-3 text-center font-medium">
+                    {owner.pets.length}
+                  </td>
+
+                  {/* Acciones */}
+                  <td className="px-4 py-3 text-center space-x-3">
                     <button className="text-blue-600 hover:underline">
+                      Ver
+                    </button>
+                    <button className="text-amber-600 hover:underline">
                       Editar
                     </button>
                     <button className="text-red-600 hover:underline">
