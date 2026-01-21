@@ -1,5 +1,12 @@
 export interface Pet {
   id: string
   name: string
-  species: "dog" | "cat"
+  species: string
+  breed: string
+  photo?: string
+  lastService?: {
+    id: string
+    name: string
+    date: string
+  }
 }

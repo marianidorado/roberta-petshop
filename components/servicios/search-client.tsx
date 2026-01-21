@@ -13,8 +13,23 @@ const clients: Client[] = [
     name: "Ana Gómez",
     document: "12345678",
     pets: [
-      { id: "p1", name: "Luna", species: "dog" },
-      { id: "p2", name: "Milo", species: "cat" },
+      {
+        id: "p1",
+        name: "Luna",
+        species: "Perro",
+        breed: "Poodle",
+        photo: "/pet-placeholder.png",
+        lastService: {
+          id: "bath",
+          name: "Baño",
+          date: "10/01/2026"
+        }
+      },
+      { id: "p2", name: "Milo", species: "cat", breed: "Siames", photo: "/pet-placeholder.png", lastService: {
+          id: "bath",
+          name: "Baño",
+          date: "10/01/2026"
+        } },
     ],
   },
   {
