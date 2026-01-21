@@ -1,4 +1,7 @@
+"use client"
 import { DashboardHeader } from "@/components/dashboard-header" 
+import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
+import { useState } from "react"
 
 const MOCK_OWNERS = [
   {
@@ -33,6 +36,8 @@ const MOCK_OWNERS = [
 ]
 
 export default function OwnersPage() {
+  const [selectedOwner, setSelectedOwner] = useState<any | null>(null)
+
   return (
     <div className="min-h-screen bg-amber-50">
       <DashboardHeader />
@@ -96,7 +101,10 @@ export default function OwnersPage() {
 
                   {/* Acciones */}
                   <td className="px-4 py-3 text-center space-x-3">
-                    <button className="text-blue-600 hover:underline">
+                    <button
+                      onClick={() => setSelectedOwner(owner)}
+                      className="text-blue-600 hover:underline"
+                    >
                       Ver
                     </button>
                     <button className="text-amber-600 hover:underline">
@@ -112,6 +120,12 @@ export default function OwnersPage() {
           </table>
         </div>
       </main>
+      {selectedOwner && (
+        <OwnerDetailsModal
+          owner={selectedOwner}
+          onClose={() => setSelectedOwner(null)}
+        />
+      )}
     </div>
   )
 }
