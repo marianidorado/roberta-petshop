@@ -39,7 +39,7 @@ export function PetSummary({ pet, onRepeat }: Props) {
           </p>
 
           <button
-            onClick={() => onRepeat(lastService.id)}
+            onClick={() => onRepeat(lastService!.id)}
             className="mt-2 text-sm text-amber-600 underline"
           >
             Repetir este servicio
