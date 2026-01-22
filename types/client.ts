@@ -1,8 +1,15 @@
 import type { Pet } from "./pet"
 
-export interface Client {
+export interface Owner {
   id: string
   name: string
+  lastName: string
   document: string
+  birthDate: string
+  city: string
+  address: string
+  phone: string
+  email: string
+  notes?: string
   pets: Pet[]
 }

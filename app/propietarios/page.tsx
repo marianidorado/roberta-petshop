@@ -1,8 +1,22 @@
 "use client"
 import { DashboardHeader } from "@/components/dashboard-header" 
 import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
+import { OwnerEditModal } from "@/components/owners/owner-edit-modal"
 import { useState } from "react"
 
+const EMPTY_OWNER = {
+  id: "",
+  name: "",
+  lastName: "",
+  document: "",
+  birthDate: "",
+  city: "",
+  address: "",
+  phone: "",
+  email: "",
+  notes: "",
+  pets: [],
+}
 const MOCK_OWNERS = [
   {
     id: "1",
@@ -36,6 +50,9 @@ const MOCK_OWNERS = [
 ]
 
 export default function OwnersPage() {
+  const [creatingOwner, setCreatingOwner] = useState(false)
+  const [owners, setOwners] = useState(MOCK_OWNERS)
+  const [editingOwner, setEditingOwner] = useState<any | null>(null)
   const [selectedOwner, setSelectedOwner] = useState<any | null>(null)
 
   return (
@@ -49,7 +66,8 @@ export default function OwnersPage() {
             Propietarios
           </h1>
 
-          <button className="px-4 py-2 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600">
+          <button  onClick={() => setCreatingOwner(true)}
+          className="px-4 py-2 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600">
             + Nuevo propietario
           </button>
         </div>
@@ -102,13 +120,10 @@ export default function OwnersPage() {
                   {/* Acciones */}
                   <td className="px-4 py-3 text-center space-x-3">
                     <button
-                      onClick={() => setSelectedOwner(owner)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Ver
-                    </button>
-                    <button className="text-amber-600 hover:underline">
-                      Editar
+                        onClick={() => setSelectedOwner(owner)}
+                        className="text-amber-600 hover:underline"
+                      >
+                        Ver
                     </button>
                     <button className="text-red-600 hover:underline">
                       Eliminar
@@ -124,8 +139,40 @@ export default function OwnersPage() {
         <OwnerDetailsModal
           owner={selectedOwner}
           onClose={() => setSelectedOwner(null)}
+          onEdit={() => {
+            setEditingOwner(selectedOwner)
+            setSelectedOwner(null)
+          }}
         />
       )}
+      {editingOwner && (
+        <OwnerEditModal
+          owner={editingOwner}
+          onClose={() => setEditingOwner(null)}
+          onSave={(updated) => {
+            setOwners(prev =>
+              prev.map(o => o.id === updated.id ? updated : o)
+            )
+            setEditingOwner(null)
+          }}
+        />
+      )}
+
+      {creatingOwner && (
+        <OwnerEditModal
+          owner={EMPTY_OWNER}
+          mode="create"
+          onClose={() => setCreatingOwner(false)}
+          onSave={(newOwner) => {
+            setOwners(prev => [
+              ...prev,
+              { ...newOwner, id: crypto.randomUUID() },
+            ])
+            setCreatingOwner(false)
+          }}
+        />
+      )}
+      
     </div>
   )
 }

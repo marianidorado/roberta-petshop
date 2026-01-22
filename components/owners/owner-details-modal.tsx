@@ -1,107 +1,68 @@
 "use client"
 
-import type { ReactNode } from "react"
-
-type Pet = {
-  id: string
-  name: string
-}
-
-type Owner = {
-  name: string
-  lastName: string
-  document: string
-  birthDate: string
-  city: string
-  address: string
-  phone: string
-  email: string
-  notes?: string
-  pets: Pet[]
-}
-
-type Props = {
-  owner: Owner
+interface OwnerDetailsModalProps {
+  owner: any
   onClose: () => void
+  onEdit: () => void
 }
 
-export function OwnerDetailsModal({ owner, onClose }: Props) {
+export function OwnerDetailsModal({
+  owner,
+  onClose,
+  onEdit,
+}: OwnerDetailsModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 space-y-6">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-amber-900">
-            Detalle del propietario
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+      <div className="bg-white rounded-xl p-6 w-full max-w-xl space-y-4">
+        <h2 className="text-xl font-bold">
+          {owner.name} {owner.lastName}
+        </h2>
 
-        {/* Datos */}
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <Info label="Nombre" value={`${owner.name} ${owner.lastName}`} />
-          <Info label="Cédula" value={owner.document} />
-          <Info label="Fecha de nacimiento" value={owner.birthDate} />
-          <Info label="Ciudad" value={owner.city} />
-          <Info label="Dirección" value={owner.address} />
-          <Info label="Celular" value={owner.phone} />
-          <Info label="Correo" value={owner.email} />
+          <p><strong>Cédula:</strong> {owner.document}</p>
+          <p><strong>Fecha nacimiento:</strong> {owner.birthDate}</p>
+          <p><strong>Ciudad:</strong> {owner.city}</p>
+          <p><strong>Celular:</strong> {owner.phone}</p>
+          <p className="col-span-2">
+            <strong>Dirección:</strong> {owner.address}
+          </p>
+          <p className="col-span-2">
+            <strong>Correo:</strong> {owner.email}
+          </p>
         </div>
 
-        {/* Observaciones */}
+        {owner.notes && (
+          <div className="bg-amber-50 p-3 rounded text-sm">
+            <strong>Observaciones:</strong>
+            <p>{owner.notes}</p>
+          </div>
+        )}
+
         <div>
-          <p className="text-sm font-semibold text-gray-600">
-            Observaciones
-          </p>
-          <p className="text-sm text-gray-800">
-            {owner.notes || "Sin observaciones"}
-          </p>
+          <p className="font-semibold text-sm mb-1">Mascotas</p>
+          <ul className="list-disc list-inside text-sm text-gray-700">
+            {owner.pets.map((pet: any) => (
+              <li key={pet.id}>{pet.name}</li>
+            ))}
+          </ul>
         </div>
 
-        {/* Mascotas */}
-        <div>
-          <p className="text-sm font-semibold text-gray-600 mb-2">
-            Mascotas
-          </p>
-
-          {owner.pets.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No tiene mascotas registradas
-            </p>
-          ) : (
-            <ul className="list-disc list-inside text-sm">
-              {owner.pets.map(pet => (
-                <li key={pet.id}>{pet.name}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2 pt-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600"
+            className="px-4 py-2 rounded border"
           >
             Cerrar
           </button>
+
+          <button
+            onClick={onEdit}
+            className="px-4 py-2 rounded bg-amber-500 text-white"
+          >
+            Editar
+          </button>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="font-medium text-gray-800">{value}</p>
     </div>
   )
 }
