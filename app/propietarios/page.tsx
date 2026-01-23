@@ -18,7 +18,7 @@ const EMPTY_OWNER = {
   notes: "",
   pets: [],
 }
-const MOCK_OWNERS = [
+const MOCK_OWNERS: Owner[] = [
   {
     id: "1",
     name: "Ana",
@@ -31,8 +31,8 @@ const MOCK_OWNERS = [
     email: "ana@email.com",
     notes: "Cliente frecuente",
     pets: [
-      { id: "p1", name: "Luna" },
-      { id: "p2", name: "Max" },
+      { id: "p1", name: "Luna", species: "Perro", breed: "Criollo", },
+      { id: "p2", name: "Max", species: "Gato", breed: "Siames"},
     ],
   },
   {
@@ -52,7 +52,7 @@ const MOCK_OWNERS = [
 
 export default function OwnersPage() {
   const [creatingOwner, setCreatingOwner] = useState(false)
-  const [owner, setOwner] = useState<Owner[]>(MOCK_OWNERS)
+  const [owners, setOwners]= useState<Owner[]>(MOCK_OWNERS);
   const [editingOwner, setEditingOwner] = useState<Owner | null>(null)
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null)
 
@@ -93,7 +93,7 @@ export default function OwnersPage() {
             </thead>
 
             <tbody>
-              {MOCK_OWNERS.map(owner => (
+              {owners.map(owner => (
                 <tr
                   key={owner.id}
                   className="border-t hover:bg-amber-50"

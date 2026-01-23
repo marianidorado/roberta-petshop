@@ -1,7 +1,9 @@
 "use client"
 
+import { Owner } from "@/types/owner"
+
 interface OwnerDetailsModalProps {
-  owner: any
+  owner: Owner
   onClose: () => void
   onEdit: () => void
 }
