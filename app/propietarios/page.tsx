@@ -151,7 +151,7 @@ export default function OwnersPage() {
           owner={editingOwner}
           onClose={() => setEditingOwner(null)}
           onSave={(updated:Owner) => {
-            setOwner(prev =>
+            setOwners(prev =>
               prev.map(o => o.id === updated.id ? updated : o)
             )
             setEditingOwner(null)
