@@ -2,6 +2,7 @@
 import { DashboardHeader } from "@/components/dashboard-header" 
 import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
 import { OwnerEditModal } from "@/components/owners/owner-edit-modal"
+import type { Owner } from "@/types/client" 
 import { useState } from "react"
 
 const EMPTY_OWNER = {
@@ -51,9 +52,9 @@ const MOCK_OWNERS = [
 
 export default function OwnersPage() {
   const [creatingOwner, setCreatingOwner] = useState(false)
-  const [owners, setOwners] = useState(MOCK_OWNERS)
-  const [editingOwner, setEditingOwner] = useState<any | null>(null)
-  const [selectedOwner, setSelectedOwner] = useState<any | null>(null)
+  const [owners, setOwners] = useState<Owner[]>(MOCK_OWNERS)
+  const [editingOwner, setEditingOwner] = useState<Owner | null>(null)
+  const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null)
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -149,7 +150,7 @@ export default function OwnersPage() {
         <OwnerEditModal
           owner={editingOwner}
           onClose={() => setEditingOwner(null)}
-          onSave={(updated) => {
+          onSave={(updated:Owner) => {
             setOwners(prev =>
               prev.map(o => o.id === updated.id ? updated : o)
             )
