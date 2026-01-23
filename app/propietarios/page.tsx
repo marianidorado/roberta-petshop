@@ -164,7 +164,7 @@ export default function OwnersPage() {
           owner={EMPTY_OWNER}
           mode="create"
           onClose={() => setCreatingOwner(false)}
-          onSave={(newOwner) => {
+          onSave={(newOwner:Owner) => {
             setOwners(prev => [
               ...prev,
               { ...newOwner, id: crypto.randomUUID() },
