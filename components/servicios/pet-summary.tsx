@@ -6,7 +6,7 @@ interface Props {
   onRepeat?: (serviceId: string) => void
 }
 
-export function PetSummary({ pet, onRepeat }: Props) {
+export function PetSummaryCard({ pet, onRepeat }: Props) {
   const lastService = pet.lastService
 
   return (

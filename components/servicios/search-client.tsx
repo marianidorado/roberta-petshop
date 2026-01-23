@@ -1,41 +1,50 @@
 "use client"
 
 import { useState } from "react"
-import type { Client } from "@/types/client"
+import type { Owner } from "@/types/owner" 
 
 interface SearchClientProps {
-  onSelect: (client: Client) => void
+  onSelect: (owner: Owner) => void
 }
 
-const clients: Client[] = [
+const owners: Owner[] = [
   {
     id: "1",
-    name: "Ana Gómez",
+    name: "Ana",
+    lastName: "Gómez",
     document: "12345678",
+    birthDate: "1990-01-01",
+    city: "Bogotá",
+    address: "Calle 1",
+    phone: "3000000000",
+    email: "ana@email.com",
     pets: [
       {
-        id: "p1",
-        name: "Luna",
-        species: "Perro",
-        breed: "Poodle",
-        photo: "/pet-placeholder.png",
-        lastService: {
-          id: "bath",
-          name: "Baño",
-          date: "10/01/2026"
-        }
-      },
-      { id: "p2", name: "Milo", species: "cat", breed: "Siames", photo: "/pet-placeholder.png", lastService: {
-          id: "bath",
-          name: "Baño",
-          date: "10/01/2026"
-        } },
+    id: "p1",
+    name: "Luna",
+    lastService: {
+      id: "bath",
+      name: "Baño",
+      date: "10/01/2026",
+    },
+  },
+      { id: "p2", name: "Milo" , lastService: {
+      id: "bath",
+      name: "Baño",
+      date: "10/01/2026",
+    },},
     ],
   },
   {
     id: "2",
-    name: "Carlos Pérez",
+    name: "Carlos",
+    lastName: "Pérez",
     document: "87654321",
+    birthDate: "1985-01-01",
+    city: "Medellín",
+    address: "Calle 2",
+    phone: "3100000000",
+    email: "carlos@email.com",
     pets: [],
   },
 ]
@@ -43,14 +52,14 @@ const clients: Client[] = [
 export function SearchClient({ onSelect }: SearchClientProps) {
   const [query, setQuery] = useState("")
 
-  const results = clients.filter((client) => {
+  const results = owners.filter((owner) => {
     const search = query.toLowerCase()
 
     return (
-      client.id.includes(search) ||
-      client.name.toLowerCase().includes(search) ||
-      client.document.includes(search) ||
-      client.pets.some((pet) =>
+      owner.id.includes(search) ||
+      owner.name.toLowerCase().includes(search) ||
+      owner.document.includes(search) ||
+      owner.pets.some((pet) =>
         pet.name.toLowerCase().includes(search)
       )
     )
@@ -76,15 +85,15 @@ export function SearchClient({ onSelect }: SearchClientProps) {
       )}
 
       <div className="space-y-2">
-        {results.map((client) => (
+        {results.map((owner) => (
           <button
-            key={client.id}
-            onClick={() => onSelect(client)}
+            key={owner.id}
+            onClick={() => onSelect(owner)}
             className="w-full text-left p-3 rounded-xl border hover:bg-amber-50"
           >
-            <p className="font-semibold">{client.name}</p>
+            <p className="font-semibold">{owner.name}</p>
             <p className="text-sm text-gray-600">
-              {client.document} · {client.pets.length} mascotas
+              {owner.document} · {owner.pets.length} mascotas
             </p>
           </button>
         ))}

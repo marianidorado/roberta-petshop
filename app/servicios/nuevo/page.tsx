@@ -9,22 +9,23 @@ const AVAILABLE_SERVICES = [
 import { useState } from "react"
 import { SearchClient } from "@/components/servicios/search-client"
 import { PetSelector } from "@/components/servicios/pet-selector"
-import type { Client } from "@/types/client"
-import type { Pet } from "@/types/pet"
-import { PetSummary } from "@/components/servicios/pet-summary"
+import type { Owner } from "@/types/owner"
+import type { PetSummary } from "@/types/pet"
+
 import { ServiceSelector } from "@/components/servicios/service-selector"
 import { MedicalNotes } from "@/components/servicios/medical-notes"
 import { SaveServiceButton } from "@/components/servicios/save-service"
+import { PetSummaryCard } from "@/components/servicios/pet-summary"
 export default function NuevoServicioPage() {
-  const [client, setClient] = useState<Client | null>(null)
+  const [owner, setOwner] = useState<Owner | null>(null)
   const [services, setServices] = useState<string[]>([])
   const [notes, setNotes] = useState("")
-  const [pet, setPet] = useState<Pet | null>(null)
+  const [pet, setPet] = useState<PetSummary | null>(null)
   function handleSave() {
-    if (!client || !pet) return
+    if (!owner || !pet) return
 
     const payload = {
-      clientId: client.id,
+      clientId: owner.id,
       petId: pet.id,
       services,
       notes,
@@ -39,15 +40,15 @@ export default function NuevoServicioPage() {
     <div className="min-h-screen bg-amber-50 p-6 space-y-6">
 
       {/* PASO 1 */}
-      <SearchClient onSelect={setClient} />
+      <SearchClient onSelect={setOwner} />
 
       {/* PASO 2 */}
-      {client && (
+      {owner && (
         <div className="bg-white rounded-xl p-4 shadow space-y-4">
           <p className="text-sm text-gray-500">Cliente seleccionado</p>
-          <p className="font-bold text-gray-800">{client.name}</p>
+          <p className="font-bold text-gray-800">{owner.name}</p>
 
-          {client.pets.length === 0 ? (
+          {owner.pets.length === 0 ? (
             <div className="space-y-2">
               <p className="text-sm text-gray-600">
                 Este cliente no tiene mascotas registradas
@@ -58,7 +59,7 @@ export default function NuevoServicioPage() {
             </div>
           ) : (
             <PetSelector
-              pets={client.pets}
+              pets={owner.pets}
               onSelect={setPet}
             />
           )}
@@ -69,7 +70,7 @@ export default function NuevoServicioPage() {
         <div className="bg-white rounded-xl p-4 shadow space-y-4">
           <p className="text-sm text-gray-500">Mascota seleccionada</p>
 
-          <PetSummary
+          <PetSummaryCard
             pet={pet}
             onRepeat={(serviceId) =>
               setServices(prev =>
@@ -101,7 +102,7 @@ export default function NuevoServicioPage() {
           disabled={services.length === 0}
           onClick={() => {
             console.log({
-              client,
+              owner,
               pet,
               services,
               notes,
