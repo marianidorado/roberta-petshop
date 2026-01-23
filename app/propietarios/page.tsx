@@ -31,8 +31,8 @@ const MOCK_OWNERS: Owner[] = [
     email: "ana@email.com",
     notes: "Cliente frecuente",
     pets: [
-      { id: "p1", name: "Luna", species: "Perro", breed: "Criollo", },
-      { id: "p2", name: "Max", species: "Gato", breed: "Siames"},
+      { id: "p1", name: "Luna",  },
+      { id: "p2", name: "Max", },
     ],
   },
   {
