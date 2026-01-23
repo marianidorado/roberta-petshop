@@ -11,5 +11,5 @@ export interface Owner {
   phone: string
   email: string
   notes?: string
-  pets: Pet[]
+  pets: { id: string; name: string }[]
 }
