@@ -1,8 +1,8 @@
 import Image from "next/image"
-import type { Pet } from "@/types/pet"
+import type { PetSummary } from "@/types/pet"
 
 interface Props {
-  pet: Pet
+  pet: PetSummary
   onRepeat?: (serviceId: string) => void
 }
 
@@ -25,9 +25,6 @@ export function PetSummaryCard({ pet, onRepeat }: Props) {
 
         <div>
           <p className="font-semibold text-lg">{pet.name}</p>
-          <p className="text-sm text-gray-600">
-            {pet.species} • {pet.breed}
-          </p>
         </div>
       </div>
 
