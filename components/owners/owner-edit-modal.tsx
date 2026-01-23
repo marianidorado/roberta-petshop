@@ -3,19 +3,23 @@
 import { Owner } from "@/types/owner"
 import { OwnerForm } from "./owner-form"
 
-export function OwnerEditModal({ owner, onClose, onSave }: Owner) {
-  if (!owner) return null
-interface Props {
+interface OwnerEditModalProps {
   owner: Owner
-  mode: "create" | "edit"
+  mode?: "create" | "edit"
   onClose: () => void
   onSave: (owner: Owner) => void
 }
+export function OwnerEditModal({
+  owner,
+  mode = "edit",
+  onClose,
+  onSave,
+}: OwnerEditModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
       <div className="bg-white rounded-xl p-6 w-full max-w-lg">
         <h2 className="text-xl font-bold mb-4">
-          {owner.id ? "Editar propietario" : "Nuevo propietario"}
+          {mode === "create" ? "Nuevo propietario" : "Editar propietario"}
         </h2>
 
         <OwnerForm

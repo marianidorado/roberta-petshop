@@ -22,7 +22,10 @@ export function OwnerDetailsModal({
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <p><strong>Cédula:</strong> {owner.document}</p>
-          <p><strong>Fecha nacimiento:</strong> {owner.birthDate}</p>
+          <p>
+            <strong>Fecha nacimiento:</strong>{" "}
+            {new Date(owner.birthDate).toLocaleDateString("es-CO")}
+          </p>
           <p><strong>Ciudad:</strong> {owner.city}</p>
           <p><strong>Celular:</strong> {owner.phone}</p>
           <p className="col-span-2">
@@ -42,11 +45,18 @@ export function OwnerDetailsModal({
 
         <div>
           <p className="font-semibold text-sm mb-1">Mascotas</p>
-          <ul className="list-disc list-inside text-sm text-gray-700">
-            {owner.pets.map((pet: any) => (
-              <li key={pet.id}>{pet.name}</li>
-            ))}
-          </ul>
+
+          {owner.pets.length > 0 ? (
+            <ul className="list-disc list-inside text-sm text-gray-700">
+              {owner.pets.map(pet => (
+                <li key={pet.id}>{pet.name}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-500">
+              No tiene mascotas registradas
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
