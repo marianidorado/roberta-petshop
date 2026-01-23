@@ -1,14 +1,15 @@
 "use client"
 
+import { Owner } from "@/types/owner"
 import { OwnerForm } from "./owner-form"
 
-export function OwnerEditModal({ owner, onClose, onSave }: any) {
+export function OwnerEditModal({ owner, onClose, onSave }: Owner) {
   if (!owner) return null
 interface Props {
-  owner: any
+  owner: Owner
   mode: "create" | "edit"
   onClose: () => void
-  onSave: (owner: any) => void
+  onSave: (owner: Owner) => void
 }
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">

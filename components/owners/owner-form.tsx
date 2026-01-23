@@ -1,11 +1,12 @@
 "use client"
 
+import { Owner } from "@/types/owner"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 interface OwnerFormProps {
-  owner: any
-  onSave: (owner: any) => void
+  owner: Owner
+  onSave: (owner: Owner) => void
   onCancel: () => void
 }
 
