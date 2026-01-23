@@ -10,3 +10,7 @@ export interface Pet {
     date: string
   }
 }
+export interface PetSummary {
+  id: string
+  name: string
+}
