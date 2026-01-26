@@ -1,16 +1,19 @@
 export interface Pet {
   id: string
+  ownerId: string
   name: string
   species: "Perro" | "Gato" | "Otro"
   breed: string
   sex: "Macho" | "Hembra"
-  birthDate: string
-  age?: number
   size: "Pequeño" | "Mediano" | "Grande"
+  birthDate?: string
+  age?: number
   photo?: string
+  attitude?: string
   allergies?: string
-  temperament?: string
-  vaccinated: boolean
+  notes?: string
+  vaccinesUpToDate: boolean
+  servicesHistory?: LastService[]
   lastService?: {
     id: string
     name: string
