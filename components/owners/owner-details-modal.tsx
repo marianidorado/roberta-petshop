@@ -5,6 +5,7 @@ import { Owner } from "@/types/owner"
 interface OwnerDetailsModalProps {
   owner: Owner
   onClose: () => void
+  onAddPet: () => void
   onEdit: () => void
 }
 
@@ -12,6 +13,7 @@ export function OwnerDetailsModal({
   owner,
   onClose,
   onEdit,
+  onAddPet,
 }: OwnerDetailsModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
@@ -24,7 +26,9 @@ export function OwnerDetailsModal({
           <p><strong>Cédula:</strong> {owner.document}</p>
           <p>
             <strong>Fecha nacimiento:</strong>{" "}
-            {new Date(owner.birthDate).toLocaleDateString("es-CO")}
+            {owner.birthDate
+                ? new Date(owner.birthDate).toLocaleDateString("es-CO")
+                : "—"}
           </p>
           <p><strong>Ciudad:</strong> {owner.city}</p>
           <p><strong>Celular:</strong> {owner.phone}</p>
@@ -43,13 +47,29 @@ export function OwnerDetailsModal({
           </div>
         )}
 
-        <div>
-          <p className="font-semibold text-sm mb-1">Mascotas</p>
+        <div className="bg-amber-50 rounded-lg p-4">
+  <div className="flex items-center justify-between mb-2">
+      <p className="font-semibold text-sm text-amber-900">
+        Mascotas
+      </p>
+
+      <button
+        onClick={onAddPet}
+        className="text-sm text-amber-600 font-semibold hover:underline"
+      >
+        + Agregar mascota
+      </button>
+  </div>
 
           {owner.pets.length > 0 ? (
-            <ul className="list-disc list-inside text-sm text-gray-700">
+            <ul className="space-y-1 text-sm">
               {owner.pets.map(pet => (
-                <li key={pet.id}>{pet.name}</li>
+                <li
+                  key={pet.id}
+                  className="bg-white px-3 py-2 rounded shadow-sm"
+                >
+                  🐾 {pet.name}
+                </li>
               ))}
             </ul>
           ) : (

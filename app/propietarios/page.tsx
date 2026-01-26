@@ -1,11 +1,16 @@
 "use client"
-import { DashboardHeader } from "@/components/dashboard-header" 
+
+import { useState } from "react"
+import { DashboardHeader } from "@/components/dashboard-header"
 import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
 import { OwnerEditModal } from "@/components/owners/owner-edit-modal"
-import type { Owner } from "@/types/owner" 
-import { useState } from "react"
+import { PetFormModal } from "@/components/mascotas/pet-form-modal"
+import type { Owner } from "@/types/owner"
 
-const EMPTY_OWNER = {
+/* ===============================
+   Helpers
+================================ */
+const createEmptyOwner = (): Owner => ({
   id: "",
   name: "",
   lastName: "",
@@ -17,7 +22,11 @@ const EMPTY_OWNER = {
   email: "",
   notes: "",
   pets: [],
-}
+})
+
+/* ===============================
+   Mock inicial
+================================ */
 const MOCK_OWNERS: Owner[] = [
   {
     id: "1",
@@ -31,8 +40,8 @@ const MOCK_OWNERS: Owner[] = [
     email: "ana@email.com",
     notes: "Cliente frecuente",
     pets: [
-      { id: "p1", name: "Luna",  },
-      { id: "p2", name: "Max", },
+      { id: "p1", name: "Luna" },
+      { id: "p2", name: "Max" },
     ],
   },
   {
@@ -51,10 +60,40 @@ const MOCK_OWNERS: Owner[] = [
 ]
 
 export default function OwnersPage() {
+  const [owners, setOwners] = useState<Owner[]>(MOCK_OWNERS)
+  const [search, setSearch] = useState("")
+
   const [creatingOwner, setCreatingOwner] = useState(false)
-  const [owners, setOwners]= useState<Owner[]>(MOCK_OWNERS);
   const [editingOwner, setEditingOwner] = useState<Owner | null>(null)
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null)
+  const [creatingPetForOwner, setCreatingPetForOwner] =
+    useState<Owner | null>(null)
+
+  /* ===============================
+     Eliminar propietario
+  ================================ */
+  function handleDelete(owner: Owner) {
+    const msg =
+      owner.pets.length > 0
+        ? `Este propietario tiene ${owner.pets.length} mascota(s).\n\nAl eliminarlo, también se eliminarán sus mascotas.\n\n¿Deseas continuar?`
+        : `¿Seguro que deseas eliminar a ${owner.name} ${owner.lastName}?`
+
+    if (!confirm(msg)) return
+
+    setOwners(prev => prev.filter(o => o.id !== owner.id))
+  }
+
+  /* ===============================
+     Filtro buscador
+  ================================ */
+  const filteredOwners = owners.filter(o => {
+    const term = search.toLowerCase()
+    return (
+      o.name.toLowerCase().includes(term) ||
+      o.lastName.toLowerCase().includes(term) ||
+      o.document.includes(term)
+    )
+  })
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -67,16 +106,20 @@ export default function OwnersPage() {
             Propietarios
           </h1>
 
-          <button  onClick={() => setCreatingOwner(true)}
-          className="px-4 py-2 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600">
+          <button
+            onClick={() => setCreatingOwner(true)}
+            className="px-4 py-2 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600"
+          >
             + Nuevo propietario
           </button>
         </div>
 
         {/* Buscador */}
         <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
           placeholder="Buscar propietario por nombre o cédula"
-          className="w-full max-w-md px-4 py-3 border rounded-md"
+          className="w-full max-w-md px-4 py-3 border rounded-md focus:ring-2 focus:ring-amber-300"
         />
 
         {/* Tabla */}
@@ -93,40 +136,27 @@ export default function OwnersPage() {
             </thead>
 
             <tbody>
-              {owners.map(owner => (
-                <tr
-                  key={owner.id}
-                  className="border-t hover:bg-amber-50"
-                >
-                  {/* Nombre */}
+              {filteredOwners.map(owner => (
+                <tr key={owner.id} className="border-t hover:bg-amber-50">
                   <td className="px-4 py-3 font-medium">
                     {owner.name} {owner.lastName}
                   </td>
-
-                  {/* Cédula */}
-                  <td className="px-4 py-3">
-                    {owner.document}
-                  </td>
-
-                  {/* Teléfono */}
-                  <td className="px-4 py-3">
-                    {owner.phone}
-                  </td>
-
-                  {/* Mascotas */}
-                  <td className="px-4 py-3 text-center font-medium">
+                  <td className="px-4 py-3">{owner.document}</td>
+                  <td className="px-4 py-3">{owner.phone}</td>
+                  <td className="px-4 py-3 text-center">
                     {owner.pets.length}
                   </td>
-
-                  {/* Acciones */}
                   <td className="px-4 py-3 text-center space-x-3">
                     <button
-                        onClick={() => setSelectedOwner(owner)}
-                        className="text-amber-600 hover:underline"
-                      >
-                        Ver
+                      onClick={() => setSelectedOwner(owner)}
+                      className="text-amber-600 hover:underline"
+                    >
+                      Ver
                     </button>
-                    <button className="text-red-600 hover:underline">
+                    <button
+                      onClick={() => handleDelete(owner)}
+                      className="text-red-600 hover:underline"
+                    >
                       Eliminar
                     </button>
                   </td>
@@ -134,8 +164,17 @@ export default function OwnersPage() {
               ))}
             </tbody>
           </table>
+
+          {filteredOwners.length === 0 && (
+            <div className="text-center text-sm text-gray-500 py-6">
+              No se encontraron propietarios
+            </div>
+          )}
         </div>
       </main>
+
+      {/* ================= Modales ================= */}
+
       {selectedOwner && (
         <OwnerDetailsModal
           owner={selectedOwner}
@@ -144,36 +183,83 @@ export default function OwnersPage() {
             setEditingOwner(selectedOwner)
             setSelectedOwner(null)
           }}
-        />
-      )}
-      {editingOwner && (
-        <OwnerEditModal
-          owner={editingOwner}
-          onClose={() => setEditingOwner(null)}
-          onSave={(updated:Owner) => {
-            setOwners(prev =>
-              prev.map(o => o.id === updated.id ? updated : o)
-            )
-            setEditingOwner(null)
+          onAddPet={() => {
+            setCreatingPetForOwner(selectedOwner)
+            setSelectedOwner(null)
           }}
         />
       )}
 
       {creatingOwner && (
         <OwnerEditModal
-          owner={EMPTY_OWNER}
           mode="create"
+          owner={createEmptyOwner()}
           onClose={() => setCreatingOwner(false)}
-          onSave={(newOwner:Owner) => {
+          onSave={(newOwner: Owner) => {
             setOwners(prev => [
               ...prev,
-              { ...newOwner, id: crypto.randomUUID() },
+              {
+                ...newOwner,
+                id: crypto.randomUUID(),
+                pets: [],
+              },
             ])
             setCreatingOwner(false)
           }}
         />
       )}
-      
+
+      {editingOwner && (
+        <OwnerEditModal
+          owner={editingOwner}
+          onClose={() => setEditingOwner(null)}
+          onSave={(updated: Owner) => {
+            setOwners(prev =>
+              prev.map(o => (o.id === updated.id ? updated : o))
+            )
+            setEditingOwner(null)
+          }}
+        />
+      )}
+
+      {creatingPetForOwner && (
+        <PetFormModal
+          mode="create"
+          pet={{
+            id: "",
+            name: "",
+            species: "Perro",
+            breed: "",
+            sex: "Macho",
+            size: "Mediano",
+            ownerId: creatingPetForOwner.id,
+            vaccinesUpToDate: false,
+          }}
+          owners={owners}
+          onClose={() => setCreatingPetForOwner(null)}
+          onSave={(newPet) => {
+            const petSummary = {
+              id: crypto.randomUUID(),
+              name: newPet.name,
+            }
+
+            setOwners(prev =>
+              prev.map(o =>
+                o.id === creatingPetForOwner.id
+                  ? { ...o, pets: [...o.pets, petSummary] }
+                  : o
+              )
+            )
+
+            setCreatingPetForOwner(null)
+            setSelectedOwner(prev =>
+              prev
+                ? { ...prev, pets: [...prev.pets, petSummary] }
+                : null
+            )
+          }}
+        />
+      )}
     </div>
   )
 }

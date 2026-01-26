@@ -83,9 +83,8 @@ export function PetFormModal({
 
         <select
           value={form.ownerId}
-          onChange={e => update("ownerId", e.target.value)}
-          className="w-full border rounded px-3 py-2 mt-1"
-          required
+          disabled={!!pet.ownerId}
+          className="w-full border rounded px-3 py-2 mt-1 bg-gray-100"
         >
           <option value="">Selecciona un propietario</option>
 
