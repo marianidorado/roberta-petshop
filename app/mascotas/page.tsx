@@ -5,7 +5,36 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { PetDetailsModal } from "@/components/mascotas/pet-details-modal"
 import type { Pet } from "@/types/pet"
 import { PetFormModal } from "@/components/mascotas/pet-form-modal"
+import type { Owner } from "@/types/owner"
 
+const MOCK_OWNERS: Owner[] = [
+  {
+    id: "1",
+    name: "Ana",
+    lastName: "Pérez",
+    document: "12345678",
+    birthDate: "1990-05-12",
+    city: "Bogotá",
+    address: "Cra 12 #45-67",
+    phone: "3001234567",
+    email: "ana@email.com",
+    notes: "Cliente frecuente",
+    pets: [],
+  },
+  {
+    id: "2",
+    name: "Carlos",
+    lastName: "Gómez",
+    document: "87654321",
+    birthDate: "1985-02-20",
+    city: "Medellín",
+    address: "Calle 8 #10-11",
+    phone: "3109876543",
+    email: "carlos@email.com",
+    notes: "",
+    pets: [],
+  },
+]
 const EMPTY_PET: Pet = {
   id: "",
   ownerId: "",
@@ -20,7 +49,7 @@ const EMPTY_PET: Pet = {
 const MOCK_PETS: Pet[] = [
   {
     id: "p1",
-    ownerId: "Ana Pérez",
+    ownerId: "1",
     name: "Luna",
     species: "Perro",
     breed: "Labrador",
@@ -57,6 +86,10 @@ export default function PetsPage() {
     .toLowerCase()
     .includes(search.toLowerCase())
 )
+const getOwnerName = (ownerId: string) => {
+  const owner = MOCK_OWNERS.find(o => o.id === ownerId)
+  return owner ? `${owner.name} ${owner.lastName}` : "—"
+}
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -116,7 +149,9 @@ export default function PetsPage() {
                       ? `${pet.lastService.name} (${pet.lastService.date})`
                       : "—"}
                   </td>
-                  <td className="px-4 py-3">{pet.ownerId}</td>
+                  <td className="px-4 py-3">
+                        {getOwnerName(pet.ownerId)}
+                    </td>
                   <td className="px-4 py-3 text-center space-x-3">
                     <button
                       onClick={() => setSelectedPet(pet)}
@@ -153,6 +188,7 @@ export default function PetsPage() {
       <PetFormModal
         pet={EMPTY_PET}
         mode="create"
+        owners={MOCK_OWNERS}
         onClose={() => setCreatingPet(false)}
         onSave={(newPet) => {
           setPets(prev => [
@@ -167,6 +203,7 @@ export default function PetsPage() {
       <PetFormModal
         pet={editingPet}
         mode="edit"
+        owners={MOCK_OWNERS}
         onClose={() => setEditingPet(null)}
         onSave={(updated) => {
           setPets(prev =>

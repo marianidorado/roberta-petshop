@@ -5,7 +5,7 @@ export interface Owner {
   name: string
   lastName: string
   document: string
-  birthDate: string
+  birthDate: string 
   city: string
   address: string
   phone: string
