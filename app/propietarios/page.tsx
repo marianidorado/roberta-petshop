@@ -236,7 +236,7 @@ export default function OwnersPage() {
             species: "Perro",
             breed: "",
             sex: "Macho",
-            size: "Mediano",
+            size: "20-40cm",
             ownerId: creatingPetForOwner.id,
             vaccinesUpToDate: false,
           }}
