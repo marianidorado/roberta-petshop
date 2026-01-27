@@ -191,22 +191,27 @@ export default function OwnersPage() {
       )}
 
       {creatingOwner && (
-        <OwnerEditModal
-          mode="create"
-          owner={createEmptyOwner()}
-          onClose={() => setCreatingOwner(false)}
-          onSave={(newOwner: Owner) => {
-            setOwners(prev => [
-              ...prev,
-              {
+          <OwnerEditModal
+            mode="create"
+            owner={createEmptyOwner()}
+            onClose={() => setCreatingOwner(false)}
+            onSave={(newOwner: Owner) => {
+              const createdOwner: Owner = {
                 ...newOwner,
                 id: crypto.randomUUID(),
                 pets: [],
-              },
-            ])
-            setCreatingOwner(false)
-          }}
-        />
+              }
+
+              // 1️⃣ Guardar en la tabla
+              setOwners(prev => [...prev, createdOwner])
+
+              // 2️⃣ Cerrar modal de propietario
+              setCreatingOwner(false)
+
+              // 3️⃣ 🔥 Abrir automáticamente agregar mascota
+              setCreatingPetForOwner(createdOwner)
+            }}
+          />
       )}
 
       {editingOwner && (

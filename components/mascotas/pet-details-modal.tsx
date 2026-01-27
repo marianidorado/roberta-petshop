@@ -46,7 +46,6 @@ export function PetDetailsModal({
             <p className="text-sm text-gray-600">
               {pet.species} · {pet.breed}
             </p>
-
             <p className="text-xs text-gray-500">
               <strong>Dueño:</strong> {ownerName || "—"}
             </p>
@@ -57,6 +56,7 @@ export function PetDetailsModal({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <p><strong>Sexo:</strong> {pet.sex}</p>
           <p><strong>Tamaño:</strong> {pet.size}</p>
+          <p><strong>Color:</strong> {pet.color || "—"}</p>
           <p><strong>Nacimiento:</strong> {pet.birthDate || "—"}</p>
           <p><strong>Edad:</strong> {calculateAge(pet.birthDate)}</p>
           <p>

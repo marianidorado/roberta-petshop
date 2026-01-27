@@ -1,34 +1,55 @@
-export interface Pet {
-  id: string
-  ownerId: string
-  name: string
-  species: "Perro" | "Gato" | "Otro"
-  breed: string
-  sex: "Macho" | "Hembra"
-  size: "Pequeño" | "Mediano" | "Grande"
-  birthDate?: string
-  age?: number
-  photo?: string
-  attitude?: string
-  allergies?: string
-  notes?: string
-  vaccinesUpToDate: boolean
-  servicesHistory?: LastService[]
-  lastService?: {
-    id: string
-    name: string
-    date: string
-  }
-}
-export interface LastService {
+export type PetSpecies = "Perro" | "Gato" | "Otro"
+
+export type PetSex = "Macho" | "Hembra"
+
+export type PetSize =
+  | "0-20cm"
+  | "20-40cm"
+  | "40-60cm"
+  | "60-70cm"
+  | "+70cm"
+
+export type PetAttitude =
+  | "Tranquilo"
+  | "Nervioso"
+  | "Juguetón"
+  | "Agresivo"
+
+export interface ServiceHistoryItem {
   id: string
   name: string
   date: string
 }
 
-export interface PetSummary {
+export interface Pet {
   id: string
+
+  /** Relación */
+  ownerId: string
+  ownerDocument?: string 
+
+  /** Datos básicos */
   name: string
+  species: PetSpecies
+  breed: string
+  sex: PetSex
+  size: PetSize
+  color?: string
+
+  /** Edad */
+  birthDate?: string
+  age?: number // opcional, calculable
+
+  /** Salud */
+  allergies?: string
+  vaccinesUpToDate: boolean
+  attitude?: PetAttitude
+
+  /** UI */
   photo?: string
-  lastService?: LastService
+  notes?: string
+
+  /** Servicios */
+  servicesHistory: ServiceHistoryItem[]
+  lastService?: ServiceHistoryItem
 }

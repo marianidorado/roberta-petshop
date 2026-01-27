@@ -4,6 +4,8 @@ import { useState } from "react"
 import type { Pet } from "@/types/pet"
 import type { Owner } from "@/types/owner"
 import Image from "next/image"
+import { PET_BREEDS } from "@/constants/pet-breeds"
+import type { PetAttitude, PetSize } from "@/types/pet"
 
 interface Props {
   pet: Pet
@@ -79,22 +81,23 @@ export function PetFormModal({
           className="w-full px-4 py-2 border rounded"
         />
         <div>
-        <label className="text-sm font-medium">Propietario</label>
+          <label className="text-sm font-medium">Propietario</label>
 
-        <select
-          value={form.ownerId}
-          disabled={!!pet.ownerId}
-          className="w-full border rounded px-3 py-2 mt-1 bg-gray-100"
-        >
-          <option value="">Selecciona un propietario</option>
+          <select
+            value={form.ownerId}
+            disabled={mode === "edit"} 
+            onChange={e => update("ownerId", e.target.value)}
+            className="w-full border rounded px-3 py-2 mt-1"
+          >
+            <option value="">Selecciona un propietario</option>
 
-          {owners.map(owner => (
-            <option key={owner.id} value={owner.id}>
-              {owner.name} {owner.lastName}
-            </option>
-          ))}
-        </select>
-      </div>
+            {owners.map(owner => (
+              <option key={owner.id} value={owner.id}>
+                {owner.name} {owner.lastName} — {owner.document}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Especie */}
         <select
@@ -110,12 +113,18 @@ export function PetFormModal({
         </select>
 
         {/* Raza */}
-        <input
+        <select
           value={form.breed}
           onChange={e => update("breed", e.target.value)}
-          placeholder="Raza"
           className="w-full px-4 py-2 border rounded"
-        />
+        >
+          <option value="">Selecciona la raza</option>
+          {PET_BREEDS.map(breed => (
+            <option key={breed} value={breed}>
+              {breed}
+            </option>
+          ))}
+        </select>
 
         {/* Sexo */}
         <select
@@ -130,14 +139,21 @@ export function PetFormModal({
         {/* Tamaño */}
         <select
           value={form.size}
-          onChange={e => update("size", e.target.value as Pet["size"])}
+          onChange={e => update("size", e.target.value as PetSize)}
           className="w-full px-4 py-2 border rounded"
         >
-          <option value="Pequeño">Pequeño</option>
-          <option value="Mediano">Mediano</option>
-          <option value="Grande">Grande</option>
+          <option value="0-20cm">0–20 cm</option>
+          <option value="20-40cm">20–40 cm</option>
+          <option value="40-60cm">40–60 cm</option>
+          <option value="60-70cm">60–70 cm</option>
+          <option value="+70cm">Mayor a 70 cm</option>
         </select>
-
+          <input
+            value={form.color || ""}
+            onChange={e => update("color", e.target.value)}
+            placeholder="Color"
+            className="w-full px-4 py-2 border rounded"
+          />
         {/* Fecha de nacimiento */}
         <input
           type="date"
@@ -147,12 +163,17 @@ export function PetFormModal({
         />
 
         {/* Actitud */}
-        <input
+        <select
           value={form.attitude || ""}
-          onChange={e => update("attitude", e.target.value)}
-          placeholder="Actitud"
+          onChange={e => update("attitude", e.target.value as PetAttitude)}
           className="w-full px-4 py-2 border rounded"
-        />
+        >
+          <option value="">Selecciona actitud</option>
+          <option value="Tranquilo">Tranquilo</option>
+          <option value="Nervioso">Nervioso</option>
+          <option value="Juguetón">Juguetón</option>
+          <option value="Agresivo">Agresivo</option>
+        </select>
 
         {/* Alergias */}
         <input
@@ -193,7 +214,12 @@ export function PetFormModal({
 
           <button 
             disabled={!form.ownerId}
-            onClick={() => onSave(form)}
+            onClick={() =>
+              onSave({
+                ...form,
+                servicesHistory: form.servicesHistory ?? [],
+              })
+            }
             className="px-4 py-2 bg-amber-500 text-white rounded font-semibold disabled:opacity-50"
           >
             Guardar

@@ -177,6 +177,7 @@ const getOwnerName = (ownerId: string) => {
           {selectedPet && (
       <PetDetailsModal
         pet={selectedPet}
+        ownerName={getOwnerName(selectedPet.ownerId)}
         onClose={() => setSelectedPet(null)}
         onEdit={() => {
           setEditingPet(selectedPet)
