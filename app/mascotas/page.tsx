@@ -42,7 +42,7 @@ const EMPTY_PET: Pet = {
   species: "Perro",
   breed: "",
   sex: "Macho",
-  size: "Mediano",
+  size: "20-40cm",
   vaccinesUpToDate: false,
 }
 
@@ -54,7 +54,7 @@ const MOCK_PETS: Pet[] = [
     species: "Perro",
     breed: "Labrador",
     sex: "Hembra",
-    size: "Grande",
+    size: "20-40cm",
     birthDate: "2020-03-10",
     vaccinesUpToDate: true,
     lastService: {

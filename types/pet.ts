@@ -50,6 +50,6 @@ export interface Pet {
   notes?: string
 
   /** Servicios */
-  servicesHistory: ServiceHistoryItem[]
+  servicesHistory?: ServiceHistoryItem[]
   lastService?: ServiceHistoryItem
 }
