@@ -1,6 +1,6 @@
 
-import type { PetTable } from "./pet-summary"
-export type {PetTable} 
+import type { PetSummary } from "./pet-summary"
+export type {PetSummary} 
 export type PetSpecies = "Perro" | "Gato" | "Otro"
 
 export type PetSex = "Macho" | "Hembra"
