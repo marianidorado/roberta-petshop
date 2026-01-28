@@ -1,18 +1,14 @@
-export type PetSize = "Pequeño" | "Mediano" | "Grande"
-
-export interface ServicePrice {
-  size: PetSize
-  price: number
+export interface ServiceSizeRule {
+  minHeightCm: number
+  maxHeightCm?: number
+  price?: number
 }
-export interface ServicePlan {
+
+export interface Service {
   id: string
   name: string
-  subtitle?: string
-  color: string
-  items: string[]
-  prices: {
-    size: string
-    price: number
-  }[]
+  description?: string
+  includes: string[] 
+  sizeRules: ServiceSizeRule[]
   active: boolean
 }

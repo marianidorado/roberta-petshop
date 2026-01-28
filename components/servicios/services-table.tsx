@@ -1,10 +1,10 @@
 "use client"
 
-import type { ServicePlan } from "@/types/service"
+import type { Service } from "@/types/service"
 
 interface Props {
-  services: ServicePlan[]
-  onEdit: (service: ServicePlan) => void
+  services: Service[]
+  onEdit: (service: Service) => void
   onDelete: (id: string) => void
 }
 
@@ -16,6 +16,7 @@ export function ServicesTable({ services, onEdit, onDelete }: Props) {
           <tr>
             <th className="text-left px-4 py-3">Servicio</th>
             <th className="text-left px-4 py-3">Incluye</th>
+            <th className="text-left px-4 py-3">Tamaños</th>
             <th className="text-center px-4 py-3">Estado</th>
             <th className="text-center px-4 py-3">Acciones</th>
           </tr>
@@ -30,17 +31,27 @@ export function ServicesTable({ services, onEdit, onDelete }: Props) {
               {/* Nombre */}
               <td className="px-4 py-3">
                 <p className="font-medium">{service.name}</p>
-                {service.subtitle && (
+                {service.description && (
                   <p className="text-xs text-gray-500">
-                    {service.subtitle}
+                    {service.description}
                   </p>
                 )}
               </td>
 
-              {/* Items */}
-              <td className="px-4 py-3 text-sm">
-                {service.items.slice(0, 3).join(", ")}
-                {service.items.length > 3 && "…"}
+              {/* Incluye */}
+              <td className="px-4 py-3">
+                {service.includes.slice(0, 3).join(", ")}
+                {service.includes.length > 3 && "…"}
+              </td>
+
+              {/* Tamaños */}
+              <td className="px-4 py-3 text-xs text-gray-700">
+                {service.sizeRules.map((r, idx) => (
+                  <div key={idx}>
+                    {r.minHeightCm} cm
+                    {r.maxHeightCm ? ` – ${r.maxHeightCm} cm` : " o más"}
+                  </div>
+                ))}
               </td>
 
               {/* Estado */}
@@ -78,7 +89,7 @@ export function ServicesTable({ services, onEdit, onDelete }: Props) {
           {services.length === 0 && (
             <tr>
               <td
-                colSpan={4}
+                colSpan={5}
                 className="text-center py-6 text-gray-500"
               >
                 No hay servicios registrados
