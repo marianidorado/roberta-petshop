@@ -98,7 +98,7 @@ export default function NuevoServicioPage() {
 
       {/* PASO 4 – Servicio (combo) */}
       
-      {pet && validServiceSelected &&(
+      {pet && (
         <ServiceSelector
           services={AVAILABLE_SERVICES}
           selected={serviceId}
