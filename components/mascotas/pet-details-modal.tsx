@@ -56,6 +56,7 @@ export function PetDetailsModal({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <p><strong>Sexo:</strong> {pet.sex}</p>
           <p><strong>Tamaño:</strong> {pet.size}</p>
+          <p><strong>Altura:</strong> {pet.heightCm} cm</p>
           <p><strong>Color:</strong> {pet.color || "—"}</p>
           <p><strong>Nacimiento:</strong> {pet.birthDate || "—"}</p>
           <p><strong>Edad:</strong> {calculateAge(pet.birthDate)}</p>

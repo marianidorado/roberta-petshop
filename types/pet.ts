@@ -37,6 +37,7 @@ export interface Pet {
   breed: string
   sex: PetSex
   size: PetSize
+  heightCm: number
   color?: string
 
   /** Edad */

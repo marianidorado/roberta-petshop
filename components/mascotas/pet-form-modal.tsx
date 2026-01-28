@@ -148,6 +148,17 @@ export function PetFormModal({
           <option value="60-70cm">60–70 cm</option>
           <option value="+70cm">Mayor a 70 cm</option>
         </select>
+        <input
+            type="number"
+            min={5}
+            max={120}
+            value={form.heightCm ?? ""}
+            onChange={e =>
+              update("heightCm", Number(e.target.value))
+            }
+            placeholder="Altura real en cm (ej: 38)"
+            className="w-full px-4 py-2 border rounded"
+          />
           <input
             value={form.color || ""}
             onChange={e => update("color", e.target.value)}

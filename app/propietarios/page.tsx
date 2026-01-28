@@ -237,6 +237,7 @@ export default function OwnersPage() {
             breed: "",
             sex: "Macho",
             size: "20-40cm",
+            heightCm: 42,
             ownerId: creatingPetForOwner.id,
             vaccinesUpToDate: false,
           }}
