@@ -1,4 +1,11 @@
-export function SearchBar() {
+"use client"
+
+interface Props {
+  value: string
+  onChange: (value: string) => void
+}
+
+export function SearchBar({ value, onChange }: Props) {
   return (
     <div className="w-full max-w-xl">
       <label className="block mb-1 text-sm font-semibold text-slate-700">
@@ -6,6 +13,8 @@ export function SearchBar() {
       </label>
       <input
         type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
         placeholder="Buscar por mascota, propietario o código"
         className="
           w-full

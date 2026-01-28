@@ -23,14 +23,14 @@ const owners: Owner[] = [
     id: "p1",
     name: "Luna",
     lastService: {
-      id: "bath",
-      name: "Baño",
+      id: "s2",
+      name: "Medicados",
       date: "10/01/2026",
     },
   },
       { id: "p2", name: "Milo" , lastService: {
-      id: "bath",
-      name: "Baño",
+      id: "s1",
+      name: "Diamante",
       date: "10/01/2026",
     },},
     ],

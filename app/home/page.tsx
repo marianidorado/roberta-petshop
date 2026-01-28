@@ -1,11 +1,13 @@
+"use client"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { SearchBar } from "@/components/search-bar"
 import { PetsTable } from "@/components/pets-table"
 import { Icon } from "@/components/ui/icon"
 import { iconPaths } from "@/components/ui/icon-paths"
+import { use, useState } from "react"
 
 export default function HomePage() {
-  
+  const [search, setSearch] = useState("")
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -42,8 +44,7 @@ export default function HomePage() {
           />
         </section>
         {/* Search */}
-        <SearchBar />
-
+        <SearchBar value={search} onChange={setSearch} />
         <section className="flex justify-end">
           <a
             href="/servicios/nuevo"
@@ -59,7 +60,7 @@ export default function HomePage() {
           <h2 className="text-lg font-semibold text-amber-900 mb-4">
             Mascotas del día
           </h2>
-          <PetsTable/>
+          <PetsTable search={search} />
         </section>
       </main>
     </div>
