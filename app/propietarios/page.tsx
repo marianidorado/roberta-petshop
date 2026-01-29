@@ -6,6 +6,7 @@ import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
 import { OwnerEditModal } from "@/components/owners/owner-edit-modal"
 import { PetFormModal } from "@/components/mascotas/pet-form-modal"
 import type { Owner } from "@/types/owner"
+import type { Pet } from "@/types/pet"
 
 /* ===============================
    Helpers
@@ -39,10 +40,25 @@ const MOCK_OWNERS: Owner[] = [
     phone: "3001234567",
     email: "ana@email.com",
     notes: "Cliente frecuente",
-    pets: [
-      { id: "p1", name: "Luna" },
-      { id: "p2", name: "Max" },
-    ],
+   pets: [
+  {
+    id: "p1",
+    ownerId: "1",
+    name: "Luna",
+    species: "Perro",
+    breed: "Poodle",
+    sex: "Hembra",
+    heightCm: 35,
+    vaccinesUpToDate: true,
+
+    lastService: {
+      id: "sr1",
+      serviceId: "s2",
+      serviceName: "Medicados",
+      entryDate: "2025-01-20",
+    },
+  },
+]
   },
   {
     id: "2",
@@ -55,10 +71,27 @@ const MOCK_OWNERS: Owner[] = [
     phone: "3109876543",
     email: "carlos@email.com",
     notes: "",
-    pets: [{ id: "p3", name: "Rocky" }],
+    pets: [
+  {
+    id: "p1",
+    ownerId: "1",
+    name: "Luna",
+    species: "Perro",
+    breed: "Poodle",
+    sex: "Hembra",
+    heightCm: 35,
+    vaccinesUpToDate: true,
+
+    lastService: {
+      id: "sr1",
+      serviceId: "s2",
+      serviceName: "Medicados",
+      entryDate: "2025-01-20",
+    },
   },
 ]
-
+  },
+]
 export default function OwnersPage() {
   const [owners, setOwners] = useState<Owner[]>(MOCK_OWNERS)
   const [search, setSearch] = useState("")
@@ -236,7 +269,6 @@ export default function OwnersPage() {
             species: "Perro",
             breed: "",
             sex: "Macho",
-            size: "20-40cm",
             heightCm: 42,
             ownerId: creatingPetForOwner.id,
             vaccinesUpToDate: false,
@@ -244,25 +276,21 @@ export default function OwnersPage() {
           owners={owners}
           onClose={() => setCreatingPetForOwner(null)}
           onSave={(newPet) => {
-            const petSummary = {
+            const pet: Pet = {
+              ...newPet,
               id: crypto.randomUUID(),
-              name: newPet.name,
+              ownerId: creatingPetForOwner.id,
             }
 
             setOwners(prev =>
               prev.map(o =>
                 o.id === creatingPetForOwner.id
-                  ? { ...o, pets: [...o.pets, petSummary] }
+                  ? { ...o, pets: [...o.pets, pet] }
                   : o
               )
             )
 
             setCreatingPetForOwner(null)
-            setSelectedOwner(prev =>
-              prev
-                ? { ...prev, pets: [...prev.pets, petSummary] }
-                : null
-            )
           }}
         />
       )}

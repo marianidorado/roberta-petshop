@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SearchClient } from "@/components/servicios/search-client"
 import { PetSelector } from "@/components/servicios/pet-selector"
 import { ServiceSelector } from "@/components/servicios/service-selector"
@@ -8,9 +8,11 @@ import { MedicalNotes } from "@/components/servicios/medical-notes"
 import { PetSummaryCard } from "@/components/servicios/pet-summary"
 
 import type { Owner } from "@/types/owner"
-import type { PetSummary } from "@/types/pet"
+import type { PetSummary } from "@/types/pet-summary"
 
-/* Servicios (combos) creados por el ADMIN */
+/* ===============================
+   Servicios disponibles
+================================ */
 const AVAILABLE_SERVICES = [
   { id: "s1", name: "Diamante" },
   { id: "s2", name: "Medicados" },
@@ -18,15 +20,39 @@ const AVAILABLE_SERVICES = [
   { id: "s4", name: "Volumen" },
 ]
 
-/* Especificaciones posibles */
-const AVAILABLE_SPECS = [
-  "Patas redondeadas",
-  "Cara osito",
-  "Corte higiénico",
-  "Cola león",
-  "Bikini medio",
+/* ===============================
+   Especificaciones FIJAS
+================================ */
+type SpecDefinition = {
+  label: string
+  options?: string[]
+  requiresInput?: boolean
+}
+
+const SPEC_DEFINITIONS: SpecDefinition[] = [
+  { label: "Aseo básico" },
+  { label: "Bikini", options: ["Alto", "Medio", "Con tijeras", "Con máquina"] },
+  { label: "Patas redondas" },
+  { label: "Pulpejos" },
+  { label: "Escarpines" },
+  { label: "Despejar ojos" },
+  { label: "Cara", options: ["Cachorro", "Cara redonda completa", "Cara abajo", "Osito", "Dona"] },
+  { label: "Orejas", options: ["Redonda", "Punta diamante", "Rapada", "Recta"] },
+  { label: "Pelo muerto" },
+  { label: "Peluquería con cuchilla", options: ["#4", "#5", "#7", "#10"] },
+  { label: "Peluquería con guía", options: ["Azul celeste", "Lila", "Morado", "Amarillo", "Verde", "Rojo", "Beige"] },
+  { label: "Peluquería con tijera" },
+  { label: "Moños" },
+  { label: "Despuntar", options: ["Cuerpo", "Cara", "Patas", "Orejas", "Cola"] },
+  { label: "Cola", options: ["Palmera", "León"] },
+  { label: "Cortes", options: ["Snauhzer", "Asiático", "Osito", "Cocker"] },
+  { label: "Deslanado" },
+  { label: "Otros", requiresInput: true },
 ]
 
+/* ===============================
+   PAGE
+================================ */
 export default function NuevoServicioPage() {
   const [owner, setOwner] = useState<Owner | null>(null)
   const [pet, setPet] = useState<PetSummary | null>(null)
@@ -35,18 +61,38 @@ export default function NuevoServicioPage() {
   const [specifications, setSpecifications] = useState<string[]>([])
   const [notes, setNotes] = useState("")
 
+  const [activeSpec, setActiveSpec] = useState<SpecDefinition | null>(null)
+  const [specValue, setSpecValue] = useState("")
+  const [repeatService, setRepeatService] = useState(false)
+
   const validServiceSelected =
-  serviceId !== null &&
-  AVAILABLE_SERVICES.some(s => s.id === serviceId)
+    serviceId !== null &&
+    AVAILABLE_SERVICES.some(s => s.id === serviceId)
 
-  function toggleSpec(spec: string) {
-    setSpecifications(prev =>
-      prev.includes(spec)
-        ? prev.filter(s => s !== spec)
-        : [...prev, spec]
-    )
-  }
+  /* ===============================
+     Efecto para autocompletar último servicio
+     solo si se presiona "Repetir servicio"
+  ================================= */
+  useEffect(() => {
+    if (repeatService && pet?.lastService) {
+      // Ejecutar después del render para evitar cascada
+      const timeout = setTimeout(() => {
+        setServiceId(pet.lastService!.serviceId)
+        if (pet.lastService!.specifications) {
+          const specsArr = Object.entries(pet.lastService!.specifications).map(
+            ([key, value]) => `${key}: ${value}`
+          )
+          setSpecifications(specsArr)
+        }
+      }, 0)
 
+      return () => clearTimeout(timeout)
+    }
+  }, [repeatService, pet])
+
+  /* ===============================
+     Guardar servicio
+  ================================= */
   function handleSave() {
     if (!owner || !pet || !serviceId) return
 
@@ -59,9 +105,16 @@ export default function NuevoServicioPage() {
       checkInAt: new Date().toISOString(),
       status: "IN_PROGRESS",
     }
-    
+
     console.log("INGRESO REGISTRADO:", payload)
     alert("Mascota ingresada correctamente 🐾")
+  }
+
+  /* ===============================
+     Eliminar especificación
+  ================================= */
+  const removeSpec = (spec: string) => {
+    setSpecifications(prev => prev.filter(s => s !== spec))
   }
 
   return (
@@ -83,21 +136,47 @@ export default function NuevoServicioPage() {
               Este cliente no tiene mascotas registradas
             </p>
           ) : (
-            <PetSelector pets={owner.pets} onSelect={setPet} />
+            <PetSelector
+              pets={owner.pets}
+              selectedPet={pet}
+              onSelect={(selectedPet) => {
+                setPet(selectedPet)
+                // Limpiar todo inmediatamente al elegir la mascota
+                setServiceId(null)
+                setSpecifications([])
+                setNotes("")
+                setActiveSpec(null)
+                setSpecValue("")
+                setRepeatService(false)
+              }}
+            />
           )}
         </div>
       )}
 
       {/* PASO 3 – Resumen mascota */}
       {pet && (
-        <PetSummaryCard
-          pet={pet}
-          onRepeat={(ServiceId) => setServiceId(ServiceId)}
-        />
-      )}
+  <PetSummaryCard
+    pet={pet}
+    onRepeat={() => {
+      if (pet.lastService) {
+        setServiceId(pet.lastService.serviceId)
 
-      {/* PASO 4 – Servicio (combo) */}
-      
+        // Autocompleta especificaciones SOLO aquí
+        if (pet.lastService.specifications) {
+          const specsArr = Object.entries(
+            pet.lastService.specifications
+          ).map(([key, value]) => `${key}: ${value}`)
+          setSpecifications(specsArr)
+        }
+
+        setRepeatService(true)
+      }
+    }}
+  />
+)}
+
+      {/* PASO 4 – Servicio */}
       {pet && (
         <ServiceSelector
           services={AVAILABLE_SERVICES}
@@ -107,34 +186,116 @@ export default function NuevoServicioPage() {
       )}
 
       {/* PASO 5 – Especificaciones */}
-      {serviceId && (
-        <div className="bg-white rounded-xl p-4 shadow space-y-3">
+      {pet && (
+        <div className="bg-white rounded-xl p-4 shadow space-y-4">
           <p className="font-semibold">Especificaciones</p>
 
-          {AVAILABLE_SPECS.map(spec => (
-            <button
-              key={spec}
-              onClick={() => toggleSpec(spec)}
-              className={`w-full text-left p-3 border rounded-xl transition
-                ${
-                  specifications.includes(spec)
-                    ? "bg-amber-100 border-amber-400"
-                    : "hover:bg-gray-50"
-                }`}
+          {/* Selector principal */}
+          <select
+            className="w-full border rounded-xl p-3"
+            value={activeSpec?.label ?? ""}
+            onChange={e => {
+              const selected = SPEC_DEFINITIONS.find(s => s.label === e.target.value)
+              setActiveSpec(selected ?? null)
+              setSpecValue("")
+            }}
+          >
+            <option value="">Selecciona una especificación</option>
+            {SPEC_DEFINITIONS.map(spec => (
+              <option key={spec.label} value={spec.label}>
+                {spec.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Sub-opciones */}
+          {activeSpec?.options && (
+            <select
+              className="w-full border rounded-xl p-3"
+              value={specValue}
+              onChange={e => {
+                const value = `${activeSpec.label}: ${e.target.value}`
+                setSpecValue(e.target.value)
+
+                setSpecifications(prev =>
+                  prev.includes(value) ? prev : [...prev, value]
+                )
+              }}
             >
-              {spec}
+              <option value="">Selecciona opción</option>
+              {activeSpec.options.map(opt => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Input libre */}
+          {activeSpec?.requiresInput && (
+            <div className="flex gap-2">
+              <input
+                className="flex-1 border rounded-xl p-3"
+                placeholder="Especificar…"
+                value={specValue}
+                onChange={e => setSpecValue(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  if (!specValue) return
+                  setSpecifications(prev => [...prev, `${activeSpec.label}: ${specValue}`])
+                  setSpecValue("")
+                }}
+                className="bg-amber-500 text-white px-4 rounded-xl"
+              >
+                Agregar
+              </button>
+            </div>
+          )}
+
+          {/* Sin sub-opciones */}
+          {activeSpec && !activeSpec.options && !activeSpec.requiresInput && (
+            <button
+              onClick={() => {
+                if (specifications.includes(activeSpec.label)) return
+                setSpecifications(prev => [...prev, activeSpec.label])
+              }}
+              className="w-full bg-amber-100 text-amber-800 p-3 rounded-xl"
+            >
+              Agregar {activeSpec.label}
             </button>
-          ))}
+          )}
+
+          {/* Chips */}
+          {specifications.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2">
+              {specifications.map(spec => (
+                <span
+                  key={spec}
+                  className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm flex items-center gap-1"
+                >
+                  {spec}
+                  <button
+                    type="button"
+                    onClick={() => removeSpec(spec)}
+                    className="text-red-500 font-bold ml-1"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* PASO 6 – Observaciones */}
-      {serviceId && (
+      {pet && (
         <MedicalNotes value={notes} onChange={setNotes} />
       )}
 
-      {/* PASO 7 – Guardar ingreso */}
-      {serviceId && (
+      {/* PASO 7 – Guardar */}
+      {pet && (
         <div className="pt-4">
           <button
             disabled={!validServiceSelected}

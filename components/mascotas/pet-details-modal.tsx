@@ -55,8 +55,7 @@ export function PetDetailsModal({
         {/* Datos principales */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <p><strong>Sexo:</strong> {pet.sex}</p>
-          <p><strong>Tamaño:</strong> {pet.size}</p>
-          <p><strong>Altura:</strong> {pet.heightCm} cm</p>
+          <p><strong>Tamaño:</strong> {pet.heightCm}</p>
           <p><strong>Color:</strong> {pet.color || "—"}</p>
           <p><strong>Nacimiento:</strong> {pet.birthDate || "—"}</p>
           <p><strong>Edad:</strong> {calculateAge(pet.birthDate)}</p>
@@ -78,7 +77,7 @@ export function PetDetailsModal({
 
           <p className="text-sm">
             {pet.lastService
-              ? `${pet.lastService.name} — ${pet.lastService.date}`
+              ? `${pet.lastService?.serviceName} — ${pet.lastService?.entryDate}`
               : "Sin servicios registrados"}
           </p>
 

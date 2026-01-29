@@ -1,16 +1,10 @@
-
+import type { ServiceRecord, ServiceRecordSummary } from "./service-record"
 import type { PetSummary } from "./pet-summary"
-export type {PetSummary} 
+
+export type { PetSummary }
+
 export type PetSpecies = "Perro" | "Gato" | "Otro"
-
 export type PetSex = "Macho" | "Hembra"
-
-export type PetSize =
-  | "0-20cm"
-  | "20-40cm"
-  | "40-60cm"
-  | "60-70cm"
-  | "+70cm"
 
 export type PetAttitude =
   | "Tranquilo"
@@ -18,42 +12,48 @@ export type PetAttitude =
   | "Juguetón"
   | "Agresivo"
 
-export interface ServiceHistoryItem {
-  id: string
-  name: string
-  date: string
-}
-
 export interface Pet {
   id: string
 
-  /** Relación */
+  /* ===============================
+   * Relaciones
+   * =============================== */
   ownerId: string
-  ownerDocument?: string 
+  ownerDocument?: string
+  ownerName?: string
 
-  /** Datos básicos */
+  /* ===============================
+   * Datos básicos
+   * =============================== */
   name: string
   species: PetSpecies
   breed: string
   sex: PetSex
-  size: PetSize
-  heightCm: number
+  heightCm: number        // ÚNICA fuente de tamaño
   color?: string
 
-  /** Edad */
+  /* ===============================
+   * Edad
+   * =============================== */
   birthDate?: string
-  age?: number // opcional, calculable
+  age?: number
 
-  /** Salud */
+  /* ===============================
+   * Salud
+   * =============================== */
   allergies?: string
   vaccinesUpToDate: boolean
   attitude?: PetAttitude
 
-  /** UI */
+  /* ===============================
+   * UI / Observaciones
+   * =============================== */
   photo?: string
   notes?: string
 
-  /** Servicios */
-  servicesHistory?: ServiceHistoryItem[]
-  lastService?: ServiceHistoryItem
+  /* ===============================
+   * Servicios
+   * =============================== */
+  servicesHistory?: ServiceRecord[]
+  lastService?: ServiceRecordSummary
 }

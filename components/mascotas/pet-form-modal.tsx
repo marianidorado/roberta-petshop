@@ -5,7 +5,7 @@ import type { Pet } from "@/types/pet"
 import type { Owner } from "@/types/owner"
 import Image from "next/image"
 import { PET_BREEDS } from "@/constants/pet-breeds"
-import type { PetAttitude, PetSize } from "@/types/pet"
+import type { PetAttitude} from "@/types/pet"
 
 interface Props {
   pet: Pet
@@ -134,19 +134,6 @@ export function PetFormModal({
         >
           <option value="Macho">Macho</option>
           <option value="Hembra">Hembra</option>
-        </select>
-
-        {/* Tamaño */}
-        <select
-          value={form.size}
-          onChange={e => update("size", e.target.value as PetSize)}
-          className="w-full px-4 py-2 border rounded"
-        >
-          <option value="0-20cm">0–20 cm</option>
-          <option value="20-40cm">20–40 cm</option>
-          <option value="40-60cm">40–60 cm</option>
-          <option value="60-70cm">60–70 cm</option>
-          <option value="+70cm">Mayor a 70 cm</option>
         </select>
         <input
             type="number"

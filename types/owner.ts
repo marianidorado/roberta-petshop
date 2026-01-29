@@ -1,4 +1,4 @@
-import type { PetSummary } from "./pet"
+import type { Pet } from "./pet"
 
 export interface Owner {
   id: string
@@ -11,5 +11,5 @@ export interface Owner {
   phone: string
   email: string
   notes?: string
-  pets: PetSummary[]
+  pets: Pet[]
 }

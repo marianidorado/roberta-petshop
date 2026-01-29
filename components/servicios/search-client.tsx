@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import type { Owner } from "@/types/owner" 
+import type { Owner } from "@/types/owner"
+import type { PetSummary } from "@/types/pet-summary"
 
 interface SearchClientProps {
   onSelect: (owner: Owner) => void
@@ -20,19 +21,41 @@ const owners: Owner[] = [
     email: "ana@email.com",
     pets: [
       {
-    id: "p1",
-    name: "Luna",
-    lastService: {
-      id: "s2",
-      name: "Medicados",
-      date: "10/01/2026",
-    },
-  },
-      { id: "p2", name: "Milo" , lastService: {
-      id: "s1",
-      name: "Diamante",
-      date: "10/01/2026",
-    },},
+        id: "p1",
+        name: "Luna",
+        species: "Perro",
+        breed: "Golden",
+        lastService: {
+          id: "s2",
+          serviceId: "s2",
+          serviceName: "Medicados",
+          entryDate: "2026-01-10",
+          specifications: { Bikini: "Medio", Cara: "Osito" },
+          observations: "Última nota",
+        },
+        ownerId: "",
+        sex: "Macho",
+        heightCm: 0,
+        vaccinesUpToDate: false
+      },
+      {
+        id: "p2",
+        name: "Milo",
+        species: "Gato",
+        breed: "Siames",
+        lastService: {
+          id: "s1",
+          serviceId: "s1",
+          serviceName: "Diamante",
+          entryDate: "2026-01-05",
+          specifications: { Bikini: "Alto", Cara: "Cachorro" },
+          observations: "Otro comentario",
+        },
+        ownerId: "",
+        sex: "Macho",
+        heightCm: 0,
+        vaccinesUpToDate: false
+      },
     ],
   },
   {
@@ -54,12 +77,11 @@ export function SearchClient({ onSelect }: SearchClientProps) {
 
   const results = owners.filter((owner) => {
     const search = query.toLowerCase()
-
     return (
       owner.id.includes(search) ||
       owner.name.toLowerCase().includes(search) ||
       owner.document.includes(search) ||
-      owner.pets.some((pet) =>
+      owner.pets.some((pet: PetSummary) =>
         pet.name.toLowerCase().includes(search)
       )
     )
@@ -79,9 +101,7 @@ export function SearchClient({ onSelect }: SearchClientProps) {
       />
 
       {query && results.length === 0 && (
-        <p className="text-sm text-gray-500">
-          No se encontró ningún cliente
-        </p>
+        <p className="text-sm text-gray-500">No se encontró ningún cliente</p>
       )}
 
       <div className="space-y-2">
@@ -91,10 +111,23 @@ export function SearchClient({ onSelect }: SearchClientProps) {
             onClick={() => onSelect(owner)}
             className="w-full text-left p-3 rounded-xl border hover:bg-amber-50"
           >
-            <p className="font-semibold">{owner.name}</p>
+            <p className="font-semibold">{owner.name} {owner.lastName}</p>
             <p className="text-sm text-gray-600">
               {owner.document} · {owner.pets.length} mascotas
             </p>
+
+            {owner.pets.length > 0 && (
+              <ul className="text-sm text-gray-500 mt-1 space-y-1">
+                {owner.pets.map((pet) => (
+                  <li key={pet.id}>
+                    {pet.name}{" "}
+                    {pet.lastService
+                      ? `(Último servicio: ${pet.lastService.serviceName})`
+                      : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
           </button>
         ))}
       </div>

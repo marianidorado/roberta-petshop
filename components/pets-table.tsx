@@ -1,8 +1,8 @@
 "use client"
 
-type ServiceStatus = "INGRESADO" | "EN_PROCESO" | "LISTO"
+export type ServiceStatus = "INGRESADO" | "EN_PROCESO" | "LISTO"
 
-interface Row {
+export interface Row {
   id: string
   code: string
   pet: string
@@ -10,46 +10,35 @@ interface Row {
   service: string
   time: string
   status: ServiceStatus
-} 
+}
 
-const mockData: Row[] = [
-  {
-    id: "1",
-    code: "SRV-001",
-    pet: "Luna",
-    owner: "Ana Pérez",
-    service: "Medicado",
-    time: "9:30 AM",
-    status: "INGRESADO",
-  },
-  {
-    id: "2",
-    code: "SRV-002",
-    pet: "Max",
-    owner: "Carlos Gómez",
-    service: "Baño",
-    time: "10:15 AM",
-    status: "EN_PROCESO",
-  },
-  {
-    id: "3",
-    code: "SRV-003",
-    pet: "Rocky",
-    owner: "Laura Ruiz",
-    service: "Peluquería",
-    time: "11:00 AM",
-    status: "LISTO",
-  },
-]
+interface Props {
+  search?: string
+  data: Row[]
+  setData: (data: Row[]) => void
+}
 
-export function PetsTable({ search = "" }: { search?: string }) {
+export function PetsTable({ search = "", data, setData }: Props) {
+  // Filtrar los datos directamente en render
   const text = search.toLowerCase()
-  const filteredData = mockData.filter(row =>
-    row.code.toLowerCase().includes(text) ||
-    row.pet.toLowerCase().includes(text) ||
-    row.owner.toLowerCase().includes(text)
+  const filteredData = data.filter(
+    row =>
+      row.code.toLowerCase().includes(text) ||
+      row.pet.toLowerCase().includes(text) ||
+      row.owner.toLowerCase().includes(text)
   )
-  
+
+  const handleStatusChange = (id: string) => {
+    const updated = data.map(row => {
+      if (row.id === id) {
+        if (row.status === "INGRESADO") return { ...row, status: "EN_PROCESO" as ServiceStatus}
+        if (row.status === "EN_PROCESO") return { ...row, status: "LISTO" as ServiceStatus}
+      }
+      return row
+    })
+    setData(updated)
+  }
+
   return (
     <div className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
       <table className="w-full text-sm">
@@ -74,7 +63,7 @@ export function PetsTable({ search = "" }: { search?: string }) {
               <td className="px-4 py-3">{row.service}</td>
               <td className="px-4 py-3">{row.time}</td>
 
-              {/* ESTADO */}
+              {/* Estado */}
               <td className="px-4 py-3 text-center">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold
@@ -91,38 +80,44 @@ export function PetsTable({ search = "" }: { search?: string }) {
                 </span>
               </td>
 
-              {/* ACCIONES */}
+              {/* Acciones */}
               <td className="px-4 py-3 text-center space-x-2">
                 {row.status === "INGRESADO" && (
-                  <button className="text-blue-600 hover:underline">
+                  <button
+                    className="text-blue-600 hover:underline"
+                    onClick={() => handleStatusChange(row.id)}
+                  >
                     Iniciar
                   </button>
                 )}
 
                 {row.status === "EN_PROCESO" && (
-                  <button className="text-green-600 hover:underline">
+                  <button
+                    className="text-green-600 hover:underline"
+                    onClick={() => handleStatusChange(row.id)}
+                  >
                     Marcar listo
                   </button>
                 )}
 
                 {row.status === "LISTO" && (
-                  <button className="text-amber-600 hover:underline font-semibold">
+                  <button
+                    className="text-amber-600 hover:underline font-semibold"
+                  >
                     Entregar
                   </button>
                 )}
               </td>
             </tr>
           ))}
+
           {filteredData.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="text-center py-6 text-slate-500"
-                >
-                  No se encontraron resultados
-                </td>
-              </tr>
-            )}
+            <tr>
+              <td colSpan={7} className="text-center py-6 text-slate-500">
+                No se encontraron resultados
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
