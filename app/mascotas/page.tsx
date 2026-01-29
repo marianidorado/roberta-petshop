@@ -166,7 +166,7 @@ export default function PetsPage() {
                     {calculateAge(pet.birthDate)}
                   </td>
                   <td className="px-4 py-3">
-                    {formatServiceDate(pet.lastService)}
+                     {formatServiceDate(pet.servicesHistory?.[pet.servicesHistory.length - 1])}
                   </td>
                   <td className="px-4 py-3">
                     {getOwnerName(pet.ownerId)}
