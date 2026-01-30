@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ServiceRecordDetailModal } from "@/components/servicios/service-record-detail" 
 import type { ServiceRecord } from "@/types/service-record"
+import { ServiceDeliveryModal } from "@/components/servicios/service-delivery-modal"
 
 
 // Mock de TODOS los propietarios y mascotas
@@ -34,6 +35,7 @@ export default function HomePage() {
   const stored: ServiceRecord[] = JSON.parse(
     localStorage.getItem("dailyServices") || "[]"
   )
+  
 
   return stored.map(record => ({
     id: record.id,
@@ -56,12 +58,24 @@ export default function HomePage() {
   localStorage.removeItem("lastServiceRecord")
   return JSON.parse(last)
 })
+  const [delivering, setDelivering] = useState<ServiceRecord | null>(null)
 
   // Totales generales para los DashboardCards
   const totalOwners = allOwners.length
   const totalPets = allPets.length
   const pendingServices = dailyServices.filter(p => p.status !== "LISTO").length
 
+const handleDeliver = (row: Row) => {
+  const stored: ServiceRecord[] = JSON.parse(
+    localStorage.getItem("dailyServices") || "[]"
+  )
+
+  const record = stored.find(r => r.id === row.id)
+  if (record) {
+    setDelivering(record)
+  }
+}
+  
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -119,18 +133,18 @@ export default function HomePage() {
             data={dailyServices}
             setData={setDailyServices}
             onSelect={(row) => {
-                const stored: ServiceRecord[] = JSON.parse(
-                  localStorage.getItem("dailyServices") || "[]"
-                )
+              const stored: ServiceRecord[] = JSON.parse(
+                localStorage.getItem("dailyServices") || "[]"
+              )
 
-                const record = stored.find(r => r.id === row.id)
-                if (record) {
-                  setSelectedRecord(record)
-                }
-              }}
-          
+              const record = stored.find(r => r.id === row.id)
+              if (record) {
+                setSelectedRecord(record)
+              }
+            }}
+            onDeliver={handleDeliver}
           />
-        </section>
+      </section>
       </main>
       {selectedRecord && (
           <ServiceRecordDetailModal
@@ -138,6 +152,48 @@ export default function HomePage() {
             onClose={() => setSelectedRecord(null)}
           />
         )}
+
+        {delivering && (
+  <ServiceDeliveryModal
+    record={delivering}
+    onClose={() => setDelivering(null)}
+    onConfirm={(updated) => {
+      // 1️⃣ Guardar en HISTORIAL
+      const history: ServiceRecord[] = JSON.parse(
+        localStorage.getItem("serviceHistory") || "[]"
+      )
+
+      history.push({
+        ...updated,
+        completed: true,
+      })
+
+      localStorage.setItem(
+        "serviceHistory",
+        JSON.stringify(history)
+      )
+
+      // 2️⃣ Quitar del día
+      const stored: ServiceRecord[] = JSON.parse(
+        localStorage.getItem("dailyServices") || "[]"
+      )
+
+      const remaining = stored.filter(r => r.id !== updated.id)
+
+      localStorage.setItem(
+        "dailyServices",
+        JSON.stringify(remaining)
+      )
+
+      // 3️⃣ Actualizar tabla del día
+      setDailyServices(prev =>
+        prev.filter(row => row.id !== updated.id)
+      )
+
+      setDelivering(null)
+    }}
+  />
+)}
     </div>
   )
 }

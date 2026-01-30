@@ -19,9 +19,10 @@ interface Props {
   data: Row[]
   setData: (data: Row[]) => void
   onSelect: (row: Row) => void
+  onDeliver: (row: Row) => void
 }
 
-export function PetsTable({ search = "", data, setData, onSelect }: Props) {
+export function PetsTable({ search = "", data, setData, onSelect, onDeliver }: Props) {
   // Filtrar los datos directamente en render
   const text = search.toLowerCase()
   const filteredData = data.filter(
@@ -90,7 +91,10 @@ export function PetsTable({ search = "", data, setData, onSelect }: Props) {
                 {row.status === "INGRESADO" && (
                   <button
                     className="text-blue-600 hover:underline"
-                    onClick={() => handleStatusChange(row.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStatusChange(row.id)
+                    }}
                   >
                     Iniciar
                   </button>
@@ -99,7 +103,10 @@ export function PetsTable({ search = "", data, setData, onSelect }: Props) {
                 {row.status === "EN_PROCESO" && (
                   <button
                     className="text-green-600 hover:underline"
-                    onClick={() => handleStatusChange(row.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStatusChange(row.id)
+                    }}
                   >
                     Marcar listo
                   </button>
@@ -108,6 +115,11 @@ export function PetsTable({ search = "", data, setData, onSelect }: Props) {
                 {row.status === "LISTO" && (
                   <button
                     className="text-amber-600 hover:underline font-semibold"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onDeliver(row)
+                      }}
+                      
                   >
                     Entregar
                   </button>
