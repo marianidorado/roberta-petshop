@@ -6,6 +6,7 @@ import { ServicesTable } from "@/components/servicios/services-table"
 import { ServiceFormModal } from "@/components/servicios/service-form-modal"
 import type { Service } from "@/types/service"
 
+
 const initialServices: Service[] = [
   {
     id: "1",
@@ -35,6 +36,7 @@ const initialServices: Service[] = [
 export default function ServiciosPage() {
   const [services, setServices] = useState<Service[]>(initialServices)
   const [editing, setEditing] = useState<Service | null>(null)
+  
 
   function save(service: Service) {
     setServices(prev =>

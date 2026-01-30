@@ -6,7 +6,8 @@ import { PetSelector } from "@/components/servicios/pet-selector"
 import { ServiceSelector } from "@/components/servicios/service-selector"
 import { MedicalNotes } from "@/components/servicios/medical-notes"
 import { PetSummaryCard } from "@/components/servicios/pet-summary"
-
+import type { ServiceRecord } from "@/types/service-record"
+import { useRouter } from "next/navigation"
 import type { Owner } from "@/types/owner"
 import type { PetSummary } from "@/types/pet-summary"
 
@@ -64,10 +65,17 @@ export default function NuevoServicioPage() {
   const [activeSpec, setActiveSpec] = useState<SpecDefinition | null>(null)
   const [specValue, setSpecValue] = useState("")
   const [repeatService, setRepeatService] = useState(false)
+  const [receivedBy, setReceivedBy] = useState("")
 
+  const router = useRouter()
   const validServiceSelected =
     serviceId !== null &&
     AVAILABLE_SERVICES.some(s => s.id === serviceId)
+
+  const canSave =
+    !!pet &&
+    !!serviceId &&
+    receivedBy.trim().length > 0
 
   /* ===============================
      Efecto para autocompletar último servicio
@@ -94,21 +102,56 @@ export default function NuevoServicioPage() {
      Guardar servicio
   ================================= */
   function handleSave() {
-    if (!owner || !pet || !serviceId) return
+  if (!owner || !pet || !serviceId || !receivedBy.trim()) return
 
-    const payload = {
-      ownerId: owner.id,
-      petId: pet.id,
-      serviceId,
-      specifications,
-      notes,
-      checkInAt: new Date().toISOString(),
-      status: "IN_PROGRESS",
-    }
+  const now = new Date()
 
-    console.log("INGRESO REGISTRADO:", payload)
-    alert("Mascota ingresada correctamente 🐾")
+  const record: ServiceRecord = {
+    id: crypto.randomUUID(),
+
+    petId: pet.id,
+    petName: pet.name,
+
+    ownerId: owner.id,
+    ownerName: `${owner.name} ${owner.lastName}`,
+
+    entryDate: now.toISOString().split("T")[0],
+    entryTime: now.toTimeString().slice(0, 5),
+    receivedBy,
+
+    serviceId,
+    serviceName:
+      AVAILABLE_SERVICES.find(s => s.id === serviceId)?.name ?? "Servicio",
+
+    specifications: specifications.reduce<Record<string, string>>(
+      (acc, item) => {
+        const [key, value] = item.split(":").map(v => v.trim())
+        acc[key] = value ?? "Sí"
+        return acc
+      },
+      {}
+    ),
+
+    observations: notes,
+    completed: false,
   }
+
+  // 1️⃣ Guardar en localStorage
+  const existing = JSON.parse(
+    localStorage.getItem("dailyServices") || "[]"
+  )
+
+  localStorage.setItem(
+    "dailyServices",
+    JSON.stringify([record, ...existing])
+  )
+
+  // 2️⃣ Guardar el último para abrir el modal
+  localStorage.setItem("lastServiceRecord", JSON.stringify(record))
+
+  // 3️⃣ Ir al Home
+  router.push("/home")
+}
 
   /* ===============================
      Eliminar especificación
@@ -288,7 +331,24 @@ export default function NuevoServicioPage() {
           )}
         </div>
       )}
+      {pet && (
+        <div className="bg-white rounded-xl p-4 shadow space-y-2">
+          <label className="text-sm font-semibold text-gray-700">
+            ¿Quién recibe la mascota?
+          </label>
 
+          <input
+            value={receivedBy}
+            onChange={e => setReceivedBy(e.target.value)}
+            placeholder="Nombre de la persona responsable"
+            className="w-full border rounded-xl p-3"
+          />
+
+          <p className="text-xs text-gray-500">
+            Esta persona queda responsable del servicio
+          </p>
+        </div>
+      )}
       {/* PASO 6 – Observaciones */}
       {pet && (
         <MedicalNotes value={notes} onChange={setNotes} />
@@ -298,13 +358,13 @@ export default function NuevoServicioPage() {
       {pet && (
         <div className="pt-4">
           <button
-            disabled={!validServiceSelected}
+            disabled={!canSave}
             onClick={handleSave}
             className={`w-full py-3 rounded-xl font-semibold text-white
               ${
-                !validServiceSelected
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-amber-500 hover:bg-amber-600"
+                !canSave
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-amber-500 hover:bg-amber-600"
               }`}
           >
             Guardar servicio

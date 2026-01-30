@@ -4,8 +4,11 @@ import { SearchBar } from "@/components/search-bar"
 import { PetsTable, Row } from "@/components/pets-table"
 import { Icon } from "@/components/ui/icon"
 import { iconPaths } from "@/components/ui/icon-paths"
-import { use, useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { ServiceRecordDetailModal } from "@/components/servicios/service-record-detail" 
+import type { ServiceRecord } from "@/types/service-record"
+
 
 // Mock de TODOS los propietarios y mascotas
 const allOwners = [
@@ -23,46 +26,42 @@ const allPets = [
   { id: "p5", name: "Simba" },
 ]
 
-// Servicios del día (para la tabla)
-const initialDailyServices: Row[] = [
-  {
-    id: "1",
-    code: "SRV-001",
-    pet: "Luna",
-    owner: "Ana Pérez",
-    service: "Medicado",
-    time: "9:30 AM",
-    status: "INGRESADO",
-  },
-  {
-    id: "2",
-    code: "SRV-002",
-    pet: "Max",
-    owner: "Carlos Gómez",
-    service: "Baño",
-    time: "10:15 AM",
-    status: "EN_PROCESO",
-  },
-  {
-    id: "3",
-    code: "SRV-003",
-    pet: "Rocky",
-    owner: "Laura Ruiz",
-    service: "Peluquería",
-    time: "11:00 AM",
-    status: "LISTO",
-  },
-]
-
-
 export default function HomePage() {
   const [search, setSearch] = useState("")
-  const [dailyServices, setDailyServices] = useState<Row[]>(initialDailyServices)
+  const [dailyServices, setDailyServices] = useState<Row[]>(() => {
+  if (typeof window === "undefined") return []
+
+  const stored: ServiceRecord[] = JSON.parse(
+    localStorage.getItem("dailyServices") || "[]"
+  )
+
+  return stored.map(record => ({
+    id: record.id,
+    code: record.id.slice(0, 8).toUpperCase(),
+    pet: record.petName,
+    owner: record.ownerName,
+    service: record.serviceName,
+    receivedBy: record.receivedBy,
+    time: record.entryTime,
+    status: record.completed ? "LISTO" : "INGRESADO",
+    notes: record.observations,
+  }))
+})
+  const [selectedRecord, setSelectedRecord] = useState<ServiceRecord | null>(() => {
+  if (typeof window === "undefined") return null
+
+  const last = localStorage.getItem("lastServiceRecord")
+  if (!last) return null
+
+  localStorage.removeItem("lastServiceRecord")
+  return JSON.parse(last)
+})
 
   // Totales generales para los DashboardCards
   const totalOwners = allOwners.length
   const totalPets = allPets.length
   const pendingServices = dailyServices.filter(p => p.status !== "LISTO").length
+
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -115,9 +114,30 @@ export default function HomePage() {
           <h2 className="text-lg font-semibold text-amber-900 mb-4">
             Mascotas del día
           </h2>
-          <PetsTable search={search} data={dailyServices} setData={setDailyServices}/>
+          <PetsTable 
+            search={search}
+            data={dailyServices}
+            setData={setDailyServices}
+            onSelect={(row) => {
+                const stored: ServiceRecord[] = JSON.parse(
+                  localStorage.getItem("dailyServices") || "[]"
+                )
+
+                const record = stored.find(r => r.id === row.id)
+                if (record) {
+                  setSelectedRecord(record)
+                }
+              }}
+          
+          />
         </section>
       </main>
+      {selectedRecord && (
+          <ServiceRecordDetailModal
+            record={selectedRecord}
+            onClose={() => setSelectedRecord(null)}
+          />
+        )}
     </div>
   )
 }

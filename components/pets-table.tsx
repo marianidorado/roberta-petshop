@@ -10,15 +10,18 @@ export interface Row {
   service: string
   time: string
   status: ServiceStatus
+  receivedBy: string
+  notes?: string
 }
 
 interface Props {
   search?: string
   data: Row[]
   setData: (data: Row[]) => void
+  onSelect: (row: Row) => void
 }
 
-export function PetsTable({ search = "", data, setData }: Props) {
+export function PetsTable({ search = "", data, setData, onSelect }: Props) {
   // Filtrar los datos directamente en render
   const text = search.toLowerCase()
   const filteredData = data.filter(
@@ -56,7 +59,9 @@ export function PetsTable({ search = "", data, setData }: Props) {
 
         <tbody className="divide-y divide-slate-200">
           {filteredData.map(row => (
-            <tr key={row.id} className="hover:bg-slate-50">
+            <tr key={row.id}
+              className="hover:bg-slate-50 cursor-pointer"
+              onClick={() => onSelect(row)}>
               <td className="px-4 py-3 font-medium">{row.code}</td>
               <td className="px-4 py-3">{row.pet}</td>
               <td className="px-4 py-3">{row.owner}</td>
