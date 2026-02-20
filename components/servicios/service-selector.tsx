@@ -1,9 +1,6 @@
 "use client"
 
-interface Service {
-  id: string
-  name: string
-}
+import type { Service } from "@/types/service"
 
 interface Props {
   services: Service[]

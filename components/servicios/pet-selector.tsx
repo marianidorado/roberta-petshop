@@ -1,12 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import type { PetSummary } from "@/types/pet-summary"
+import type { Pet } from "@/types/pet"
 
 interface Props {
-  pets: PetSummary[]
-  selectedPet: PetSummary | null
-  onSelect: (pet: PetSummary) => void
+  pets: Pet[]
+  selectedPet: Pet | null
+  onSelect: (pet: Pet) => void
 }
 
 export function PetSelector({ pets, selectedPet, onSelect }: Props) {

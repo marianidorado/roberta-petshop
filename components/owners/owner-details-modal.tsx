@@ -63,14 +63,16 @@ export function OwnerDetailsModal({
 
           {owner.pets.length > 0 ? (
             <ul className="space-y-1 text-sm">
-              {owner.pets.map(pet => (
-                <li
-                  key={pet.id}
-                  className="bg-white px-3 py-2 rounded shadow-sm"
-                >
-                  🐾 {pet.name}
-                </li>
-              ))}
+              {owner.pets
+                  .filter(pet => pet.id) // 🔑 solo mascotas con ID real
+                  .map(pet => (
+                    <li
+                      key={pet.id}
+                      className="bg-white px-3 py-2 rounded shadow-sm"
+                    >
+                      🐾 {pet.name}
+                    </li>
+                ))}
             </ul>
           ) : (
             <p className="text-sm text-gray-500">

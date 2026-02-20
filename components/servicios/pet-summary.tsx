@@ -1,10 +1,10 @@
 "use client"
 
 import Image from "next/image"
-import type { PetSummary } from "@/types/pet-summary"
+import type { Pet } from "@/types/pet"
 
 interface Props {
-  pet: PetSummary
+  pet: Pet
   onRepeat?: (serviceId: string) => void
 }
 

@@ -1,6 +1,6 @@
 "use client"
 
-export type ServiceStatus = "INGRESADO" | "EN_PROCESO" | "LISTO"
+export type ServiceStatus = "EN_PROCESO" | "LISTO" | "ENTREGADO"
 
 export interface Row {
   id: string
@@ -8,43 +8,22 @@ export interface Row {
   pet: string
   owner: string
   service: string
+  receivedBy: string
   time: string
   status: ServiceStatus
-  receivedBy: string
   notes?: string
 }
 
-interface Props {
-  search?: string
-  data: Row[]
-  setData: (data: Row[]) => void
-  onSelect: (row: Row) => void
-  onDeliver: (row: Row) => void
+interface PetsTableProps {
+  rows: Row[]
+  onMarkReady: (id: string) => void
+  onDeliver: (id: string) => void
 }
 
-export function PetsTable({ search = "", data, setData, onSelect, onDeliver }: Props) {
-  // Filtrar los datos directamente en render
-  const text = search.toLowerCase()
-  const filteredData = data.filter(
-    row =>
-      row.code.toLowerCase().includes(text) ||
-      row.pet.toLowerCase().includes(text) ||
-      row.owner.toLowerCase().includes(text)
-  )
-
-  const handleStatusChange = (id: string) => {
-    const updated = data.map(row => {
-      if (row.id === id) {
-        if (row.status === "INGRESADO") return { ...row, status: "EN_PROCESO" as ServiceStatus}
-        if (row.status === "EN_PROCESO") return { ...row, status: "LISTO" as ServiceStatus}
-      }
-      return row
-    })
-    setData(updated)
-  }
+export function PetsTable({ rows, onMarkReady, onDeliver }: PetsTableProps) {
 
   return (
-    <div className="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+    <div className="overflow-x-auto bg-white rounded-xl shadow border border-slate-200">
       <table className="w-full text-sm">
         <thead className="bg-slate-100 text-slate-800">
           <tr>
@@ -59,54 +38,33 @@ export function PetsTable({ search = "", data, setData, onSelect, onDeliver }: P
         </thead>
 
         <tbody className="divide-y divide-slate-200">
-          {filteredData.map(row => (
-            <tr key={row.id}
-              className="hover:bg-slate-50 cursor-pointer"
-              onClick={() => onSelect(row)}>
+          {rows.map(row => (
+            <tr key={row.id} className="hover:bg-slate-50">
               <td className="px-4 py-3 font-medium">{row.code}</td>
               <td className="px-4 py-3">{row.pet}</td>
               <td className="px-4 py-3">{row.owner}</td>
               <td className="px-4 py-3">{row.service}</td>
               <td className="px-4 py-3">{row.time}</td>
 
-              {/* Estado */}
               <td className="px-4 py-3 text-center">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold
                     ${
-                      row.status === "INGRESADO"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : row.status === "EN_PROCESO"
+                      row.status === "EN_PROCESO"
                         ? "bg-blue-100 text-blue-700"
                         : "bg-green-100 text-green-700"
                     }
                   `}
                 >
-                  {row.status.replace("_", " ")}
+                  {row.status?.replace("_", " ") ?? "EN PROCESO"}
                 </span>
               </td>
 
-              {/* Acciones */}
               <td className="px-4 py-3 text-center space-x-2">
-                {row.status === "INGRESADO" && (
-                  <button
-                    className="text-blue-600 hover:underline"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStatusChange(row.id)
-                    }}
-                  >
-                    Iniciar
-                  </button>
-                )}
-
                 {row.status === "EN_PROCESO" && (
                   <button
-                    className="text-green-600 hover:underline"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStatusChange(row.id)
-                    }}
+                    onClick={() => onMarkReady(row.id)}
+                    className="text-blue-600 hover:underline"
                   >
                     Marcar listo
                   </button>
@@ -114,12 +72,8 @@ export function PetsTable({ search = "", data, setData, onSelect, onDeliver }: P
 
                 {row.status === "LISTO" && (
                   <button
-                    className="text-amber-600 hover:underline font-semibold"
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        onDeliver(row)
-                      }}
-                      
+                    onClick={() => onDeliver(row.id)}
+                    className="text-green-600 hover:underline"
                   >
                     Entregar
                   </button>
@@ -128,10 +82,10 @@ export function PetsTable({ search = "", data, setData, onSelect, onDeliver }: P
             </tr>
           ))}
 
-          {filteredData.length === 0 && (
+          {rows.length === 0 && (
             <tr>
               <td colSpan={7} className="text-center py-6 text-slate-500">
-                No se encontraron resultados
+                No hay servicios hoy
               </td>
             </tr>
           )}

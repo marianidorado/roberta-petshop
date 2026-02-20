@@ -11,9 +11,13 @@ interface Props {
 
 export function ServiceFormModal({ service, onClose, onSave }: Props) {
   const [form, setForm] = useState<Service>({
-    ...service,
+    id: service.id,
+    name: service.name ?? "",
+    description: service.description ?? "",
+    active: service.active ?? true,
     includes: service.includes ?? [],
     sizeRules: service.sizeRules ?? [],
+    specifications: service.specifications ?? [],
   })
 
   const [includeItem, setIncludeItem] = useState("")
@@ -38,7 +42,7 @@ export function ServiceFormModal({ service, onClose, onSave }: Props) {
 
         {/* Descripción */}
         <input
-          value={form.description || ""}
+          value={form.description}
           onChange={e => setForm({ ...form, description: e.target.value })}
           placeholder="Descripción (opcional)"
           className="w-full px-4 py-2 border rounded"
@@ -56,12 +60,15 @@ export function ServiceFormModal({ service, onClose, onSave }: Props) {
               className="flex-1 px-4 py-2 border rounded"
             />
             <button
+              type="button"
               onClick={() => {
                 if (!includeItem.trim()) return
+
                 setForm(prev => ({
                   ...prev,
-                  includes: [...prev.includes, includeItem],
+                  includes: [...prev.includes, includeItem.trim()],
                 }))
+
                 setIncludeItem("")
               }}
               className="bg-amber-500 text-white px-3 rounded"
@@ -75,6 +82,7 @@ export function ServiceFormModal({ service, onClose, onSave }: Props) {
               <li key={idx} className="flex justify-between">
                 {i}
                 <button
+                  type="button"
                   onClick={() =>
                     setForm(prev => ({
                       ...prev,
@@ -104,25 +112,25 @@ export function ServiceFormModal({ service, onClose, onSave }: Props) {
             />
             <input
               type="number"
-              placeholder="Hasta"
+              placeholder="Hasta (opcional)"
               value={maxCm}
               onChange={e => setMaxCm(e.target.value)}
               className="w-24 px-3 py-2 border rounded"
             />
 
             <button
+              type="button"
               onClick={() => {
                 if (!minCm) return
 
+                const rule = {
+                  minHeightCm: Number(minCm),
+                  ...(maxCm !== "" ? { maxHeightCm: Number(maxCm) } : {}),
+                }
+
                 setForm(prev => ({
                   ...prev,
-                  sizeRules: [
-                    ...prev.sizeRules,
-                    {
-                      minHeightCm: Number(minCm),
-                      maxHeightCm: maxCm ? Number(maxCm) : undefined,
-                    },
-                  ],
+                  sizeRules: [...prev.sizeRules, rule],
                 }))
 
                 setMinCm("")
@@ -140,6 +148,7 @@ export function ServiceFormModal({ service, onClose, onSave }: Props) {
                 {r.minHeightCm} cm
                 {r.maxHeightCm ? ` – ${r.maxHeightCm} cm` : " o más"}
                 <button
+                  type="button"
                   onClick={() =>
                     setForm(prev => ({
                       ...prev,
@@ -167,10 +176,16 @@ export function ServiceFormModal({ service, onClose, onSave }: Props) {
 
         {/* Acciones */}
         <div className="flex justify-end gap-3 pt-4">
-          <button onClick={onClose} className="px-4 py-2 border rounded">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border rounded"
+          >
             Cancelar
           </button>
+
           <button
+            type="button"
             onClick={() => onSave(form)}
             className="px-4 py-2 bg-amber-500 text-white rounded font-semibold"
           >

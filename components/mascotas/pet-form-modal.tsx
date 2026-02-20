@@ -39,6 +39,7 @@ export function PetFormModal({
   reader.readAsDataURL(file)
 }
 
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto space-y-4">
@@ -209,19 +210,15 @@ export function PetFormModal({
           >
             Cancelar
           </button>
-
-          <button 
-            disabled={!form.ownerId}
-            onClick={() =>
-              onSave({
-                ...form,
-                servicesHistory: form.servicesHistory ?? [],
-              })
-            }
-            className="px-4 py-2 bg-amber-500 text-white rounded font-semibold disabled:opacity-50"
-          >
-            Guardar
-          </button>
+            <button
+                 disabled={!form.ownerId}
+                  onClick={() => {
+                    onSave(form)
+                  }}
+                className="px-4 py-2 bg-amber-500 text-white rounded font-semibold disabled:opacity-50"
+              >
+                Guardar
+              </button>
         </div>
       </div>
     </div>

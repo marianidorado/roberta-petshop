@@ -1,89 +1,95 @@
 "use client"
+
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { SearchBar } from "@/components/search-bar"
 import { PetsTable, Row } from "@/components/pets-table"
 import { Icon } from "@/components/ui/icon"
 import { iconPaths } from "@/components/ui/icon-paths"
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { ServiceRecordDetailModal } from "@/components/servicios/service-record-detail" 
-import type { ServiceRecord } from "@/types/service-record"
+import { ServiceRecordDetailModal } from "@/components/servicios/service-record-detail"
 import { ServiceDeliveryModal } from "@/components/servicios/service-delivery-modal"
 
+import { getOwners } from "@/lib/firebase/owners"
+import { getPets } from "@/lib/firebase/pets"
+import {
+  getTodayServiceRecords,
+  markServiceReady,
+  deliverService,
+} from "@/lib/firebase/service-record"
 
-// Mock de TODOS los propietarios y mascotas
-const allOwners = [
-  { id: "o1", name: "Ana Pérez" },
-  { id: "o2", name: "Carlos Gómez" },
-  { id: "o3", name: "Laura Ruiz" },
-  { id: "o4", name: "María López" },
-]
-
-const allPets = [
-  { id: "p1", name: "Luna" },
-  { id: "p2", name: "Max" },
-  { id: "p3", name: "Rocky" },
-  { id: "p4", name: "Bella" },
-  { id: "p5", name: "Simba" },
-]
+import type { Owner } from "@/types/owner"
+import type { Pet } from "@/types/pet"
+import type { ServiceRecord } from "@/types/service-record"
+import type { ServiceStatus } from "@/components/pets-table"
 
 export default function HomePage() {
+  const [owners, setOwners] = useState<Owner[]>([])
+  const [pets, setPets] = useState<Pet[]>([])
+  const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([])
   const [search, setSearch] = useState("")
-  const [dailyServices, setDailyServices] = useState<Row[]>(() => {
-  if (typeof window === "undefined") return []
-
-  const stored: ServiceRecord[] = JSON.parse(
-    localStorage.getItem("dailyServices") || "[]"
-  )
-  
-
-  return stored.map(record => ({
-    id: record.id,
-    code: record.id.slice(0, 8).toUpperCase(),
-    pet: record.petName,
-    owner: record.ownerName,
-    service: record.serviceName,
-    receivedBy: record.receivedBy,
-    time: record.entryTime,
-    status: record.completed ? "LISTO" : "INGRESADO",
-    notes: record.observations,
-  }))
-})
-  const [selectedRecord, setSelectedRecord] = useState<ServiceRecord | null>(() => {
-  if (typeof window === "undefined") return null
-
-  const last = localStorage.getItem("lastServiceRecord")
-  if (!last) return null
-
-  localStorage.removeItem("lastServiceRecord")
-  return JSON.parse(last)
-})
+  const [selectedRecord, setSelectedRecord] = useState<ServiceRecord | null>(null)
   const [delivering, setDelivering] = useState<ServiceRecord | null>(null)
 
-  // Totales generales para los DashboardCards
-  const totalOwners = allOwners.length
-  const totalPets = allPets.length
-  const pendingServices = dailyServices.filter(p => p.status !== "LISTO").length
+  useEffect(() => {
+    async function loadHomeData() {
+      try {
+        const [ownersDb, petsDb, servicesDb] = await Promise.all([
+          getOwners(),
+          getPets(),
+          getTodayServiceRecords(),
+        ])
 
-const handleDeliver = (row: Row) => {
-  const stored: ServiceRecord[] = JSON.parse(
-    localStorage.getItem("dailyServices") || "[]"
-  )
+        setOwners(ownersDb)
+        setPets(petsDb)
+        setServiceRecords(servicesDb)
+      } catch (error) {
+        console.error("Error cargando Home:", error)
+      }
+    }
 
-  const record = stored.find(r => r.id === row.id)
-  if (record) {
-    setDelivering(record)
+    loadHomeData()
+  }, [])
+
+  /* Transformar servicios en filas */
+  const dailyServices: Row[] = useMemo(() => {
+    return serviceRecords
+      .filter(service => service.status !== "ENTREGADO")
+      .map(service => mapServiceToRow(service))
+  }, [serviceRecords])
+
+  const filteredServices = useMemo(() => {
+    return dailyServices.filter(row =>
+      row.code.toLowerCase().includes(search.toLowerCase()) ||
+      row.pet.toLowerCase().includes(search.toLowerCase()) ||
+      row.owner.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [dailyServices, search])
+
+  const totalOwners = owners.length
+  const totalPets = pets.length
+  const pendingServices = dailyServices.length
+
+  const handleMarkReady = async (id: string) => {
+    await markServiceReady(id)
+
+    setServiceRecords(prev =>
+      prev.map(r =>
+        r.id === id ? { ...r, status: "LISTO" } : r
+      )
+    )
   }
-}
-  
+
+  const handleDeliver = (id: string) => {
+    const record = serviceRecords.find(r => r.id === id)
+    if (record) setDelivering(record)
+  }
 
   return (
     <div className="min-h-screen bg-amber-50">
       <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-
-        {/* Welcome */}
         <section>
           <h1 className="text-2xl font-bold text-amber-900">
             Bienvenida a Roberta Pet Shop
@@ -93,7 +99,6 @@ const handleDeliver = (row: Row) => {
           </p>
         </section>
 
-        {/* Summary cards */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <DashboardCard
             title="Propietarios"
@@ -111,8 +116,9 @@ const handleDeliver = (row: Row) => {
             icon={iconPaths.servicios}
           />
         </section>
-        {/* Search */}
+
         <SearchBar value={search} onChange={setSearch} />
+
         <section className="flex justify-end">
           <Link
             href="/servicios/nuevo"
@@ -123,79 +129,63 @@ const handleDeliver = (row: Row) => {
           </Link>
         </section>
 
-        {/* Pets table */}
         <section>
           <h2 className="text-lg font-semibold text-amber-900 mb-4">
             Mascotas del día
           </h2>
-          <PetsTable 
-            search={search}
-            data={dailyServices}
-            setData={setDailyServices}
-            onSelect={(row) => {
-              const stored: ServiceRecord[] = JSON.parse(
-                localStorage.getItem("dailyServices") || "[]"
-              )
 
-              const record = stored.find(r => r.id === row.id)
-              if (record) {
-                setSelectedRecord(record)
-              }
-            }}
+          <PetsTable
+            rows={filteredServices}
+            onMarkReady={handleMarkReady}
             onDeliver={handleDeliver}
           />
-      </section>
+        </section>
       </main>
+
       {selectedRecord && (
-          <ServiceRecordDetailModal
-            record={selectedRecord}
-            onClose={() => setSelectedRecord(null)}
-          />
-        )}
+        <ServiceRecordDetailModal
+          record={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
 
-        {delivering && (
-  <ServiceDeliveryModal
-    record={delivering}
-    onClose={() => setDelivering(null)}
-    onConfirm={(updated) => {
-      // 1️⃣ Guardar en HISTORIAL
-      const history: ServiceRecord[] = JSON.parse(
-        localStorage.getItem("serviceHistory") || "[]"
-      )
+      {delivering && (
+        <ServiceDeliveryModal
+          record={delivering}
+          onClose={() => setDelivering(null)}
+          onConfirm={async updated => {
+            const now = new Date()
+            const exitTime =
+              String(now.getHours()).padStart(2, "0") +
+              ":" +
+              String(now.getMinutes()).padStart(2, "0")
 
-      history.push({
-        ...updated,
-        completed: true,
-      })
+            await deliverService(updated.id, exitTime, updated.ownerSignature)
 
-      localStorage.setItem(
-        "serviceHistory",
-        JSON.stringify(history)
-      )
+            setServiceRecords(prev =>
+              prev.filter(r => r.id !== updated.id)
+            )
 
-      // 2️⃣ Quitar del día
-      const stored: ServiceRecord[] = JSON.parse(
-        localStorage.getItem("dailyServices") || "[]"
-      )
-
-      const remaining = stored.filter(r => r.id !== updated.id)
-
-      localStorage.setItem(
-        "dailyServices",
-        JSON.stringify(remaining)
-      )
-
-      // 3️⃣ Actualizar tabla del día
-      setDailyServices(prev =>
-        prev.filter(row => row.id !== updated.id)
-      )
-
-      setDelivering(null)
-    }}
-  />
-)}
+            setDelivering(null)
+          }}
+        />
+      )}
     </div>
   )
+}
+
+function mapServiceToRow(service: ServiceRecord): Row {
+  return {
+    id: service.id,
+    code: service.id.slice(0, 8).toUpperCase(),
+    pet: service.petName,
+    owner: service.ownerName,
+    service: service.serviceName,
+    receivedBy: service.receivedBy,
+    time: service.entryTime,
+    status: (service.status ?? "EN_PROCESO") as ServiceStatus,
+    notes: service.observations,
+  }
 }
 
 function DashboardCard({

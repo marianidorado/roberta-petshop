@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import type { Pet } from "@/types/pet"
 
 interface Props {
@@ -26,11 +27,12 @@ export function PetDetailsModal({
   onClose,
   onEdit,
 }: Props) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-xl space-y-5">
+  const router = useRouter()
 
-        {/* Header */}
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto space-y-5">
+
         <div className="flex items-center gap-4">
           <Image
             src={pet.photo || "/pet-placeholder.png"}
@@ -42,7 +44,6 @@ export function PetDetailsModal({
 
           <div className="flex-1">
             <h2 className="text-xl font-bold">{pet.name}</h2>
-
             <p className="text-sm text-gray-600">
               {pet.species} · {pet.breed}
             </p>
@@ -52,8 +53,7 @@ export function PetDetailsModal({
           </div>
         </div>
 
-        {/* Datos principales */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <p><strong>Sexo:</strong> {pet.sex}</p>
           <p><strong>Tamaño:</strong> {pet.heightCm}</p>
           <p><strong>Color:</strong> {pet.color || "—"}</p>
@@ -65,37 +65,31 @@ export function PetDetailsModal({
           </p>
         </div>
 
-        {/* Salud */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <p><strong>Actitud:</strong> {pet.attitude || "—"}</p>
-          <p><strong>Alergias:</strong> {pet.allergies || "—"}</p>
-        </div>
-
-        {/* Último servicio */}
-        <div className="bg-amber-50 p-3 rounded space-y-1">
+        <div className="bg-amber-50 p-3 rounded space-y-2">
           <strong>Último servicio:</strong>
 
           <p className="text-sm">
             {pet.lastService
-              ? `${pet.lastService?.serviceName} — ${pet.lastService?.entryDate}`
+              ? `${pet.lastService.serviceName} — ${pet.lastService.entryDate}`
               : "Sin servicios registrados"}
           </p>
 
           <button
-            onClick={() => alert("Abrir historial de servicios")}
+            onClick={() => {
+              onClose()
+              router.push(`/historial?petId=${pet.id}`)
+            }}
             className="text-amber-700 text-sm font-medium hover:underline"
           >
             Ver historial de servicios
           </button>
         </div>
 
-        {/* Notas */}
         <div className="text-sm">
           <strong>Notas:</strong>
           <p className="text-gray-600">{pet.notes || "—"}</p>
         </div>
 
-        {/* Acciones */}
         <div className="flex justify-end gap-3 pt-4">
           <button onClick={onClose} className="px-4 py-2 border rounded">
             Cerrar

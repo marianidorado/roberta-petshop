@@ -1,23 +1,38 @@
 "use client"
 import Image from "next/image"
 import type { ServiceRecord } from "@/types/service-record"
+import { useEffect } from "react"
+import { exportServiceRecordPDF } from "@/lib/utils/export-service-record-pdf"
+import { Service } from "@/types/service"
 
 interface Props {
   record: ServiceRecord
+  services: Service[]
   onClose: () => void
 }
 
-export function HistoryDetailModal({ record, onClose }: Props) {
+export function HistoryDetailModal({ record, onClose, services }: Props) {
+  useEffect(() => {
+  const handleEsc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose()
+  }
+  window.addEventListener("keydown", handleEsc)
+  return () => window.removeEventListener("keydown", handleEsc)
+}, [onClose])
+
+const serviceInfo = services.find(
+  s => s.id === record.serviceId
+)
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white
-          rounded-xl
-          shadow-xl
-          w-full
-          max-w-2xl
-          max-h-[90vh]
-          flex
-          flex-col">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose} // ✅ cerrar al hacer click fuera
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-150"
+        onClick={(e) => e.stopPropagation()} // evita cerrar al hacer click dentro
+      >
         
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b shrink-0">
@@ -45,6 +60,22 @@ export function HistoryDetailModal({ record, onClose }: Props) {
         {/* Servicio */}
         <Section title="Servicio realizado">
           <Item label="Servicio" value={record.serviceName} />
+
+          {Array.isArray(serviceInfo?.includes) && serviceInfo.includes.length > 0 && (
+            <div className="mt-4">
+              <h4 className="font-semibold text-amber-800 mb-2">
+                Incluye el servicio:
+              </h4>
+
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-700">
+                {serviceInfo.includes.map(item => (
+                  <li key={item} className="flex gap-2">
+                    ✓ {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {record.specifications && (
             <div className="col-span-2">
@@ -75,7 +106,7 @@ export function HistoryDetailModal({ record, onClose }: Props) {
         <Section title="Egreso">
           <Item
             label="Estado"
-            value={record.completed ? "Servicio finalizado" : "En proceso"}
+            value={record.status === "ENTREGADO"? "Servicio finalizado": record.status}
           />
           <Item
             label="Hora de salida"
@@ -99,13 +130,22 @@ export function HistoryDetailModal({ record, onClose }: Props) {
         </Section>
         </div>
         {/* Footer */}
-        <div className="px-6 py-4 border-t shrink-0 flex justify-end">
+        <div className="px-6 py-4 border-t shrink-0 flex flex-col sm:flex-row gap-3 sm:justify-between">
+
+          <button
+            onClick={() => exportServiceRecordPDF(record, services)}
+            className="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-semibold"
+          >
+            Descargar PDF
+          </button>
+
           <button
             onClick={onClose}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold"
+            className="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-semibold transition"
           >
             Cerrar
           </button>
+
         </div>
       </div>
     </div>

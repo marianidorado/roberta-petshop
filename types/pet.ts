@@ -19,15 +19,13 @@ export interface Pet {
    * Relaciones
    * =============================== */
   ownerId: string
-  ownerDocument?: string
-  ownerName?: string
 
   /* ===============================
    * Datos básicos
    * =============================== */
   name: string
   species: PetSpecies
-  breed: string
+  breed?: string
   sex: PetSex
   heightCm: number        // ÚNICA fuente de tamaño
   color?: string
@@ -54,6 +52,5 @@ export interface Pet {
   /* ===============================
    * Servicios
    * =============================== */
-  servicesHistory?: ServiceRecord[]
   lastService?: ServiceRecordSummary
 }

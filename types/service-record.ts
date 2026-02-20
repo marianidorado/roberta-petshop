@@ -53,5 +53,5 @@
     /* ===============================
     * Estado
     * =============================== */
-    completed: boolean
+    status: "EN_PROCESO" | "LISTO" | "ENTREGADO"
   }

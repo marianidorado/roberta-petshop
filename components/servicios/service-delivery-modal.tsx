@@ -1,6 +1,7 @@
 "use client"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import type { ServiceRecord } from "@/types/service-record"
+import SignaturePad from "@/components/ui/signature-pad"
 
 interface Props {
   record: ServiceRecord
@@ -9,37 +10,14 @@ interface Props {
 }
 
 export function ServiceDeliveryModal({ record, onClose, onConfirm }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const [drawing, setDrawing] = useState(false)
-
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const ctx = canvasRef.current?.getContext("2d")
-    if (!ctx) return
-    ctx.beginPath()
-    ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
-    setDrawing(true)
-  }
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawing) return
-    const ctx = canvasRef.current?.getContext("2d")
-    if (!ctx) return
-    ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
-    ctx.stroke()
-  }
-
-  const stopDrawing = () => setDrawing(false)
-
-  const clearSignature = () => {
-    const ctx = canvasRef.current?.getContext("2d")
-    if (!ctx || !canvasRef.current) return
-    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-  }
+  const [signature, setSignature] = useState<string | null>(null)
 
   const handleConfirm = () => {
-    if (!canvasRef.current) return
+    if (!signature) {
+      alert("Debe firmar antes de confirmar la entrega")
+      return
+    }
 
-    const signature = canvasRef.current.toDataURL("image/png")
     const exitTime = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -49,7 +27,7 @@ export function ServiceDeliveryModal({ record, onClose, onConfirm }: Props) {
       ...record,
       exitTime,
       ownerSignature: signature,
-      completed: true,
+      status: "ENTREGADO",
     })
   }
 
@@ -66,29 +44,14 @@ export function ServiceDeliveryModal({ record, onClose, onConfirm }: Props) {
         <p className="text-sm text-slate-600">
           Mascota: <strong>{record.petName}</strong>
         </p>
-
-        {/* Firma */}
         <div>
-          <p className="text-sm font-medium mb-1">Firma del propietario</p>
-          <canvas
-            ref={canvasRef}
-            width={400}
-            height={150}
-            className="border rounded bg-white cursor-crosshair"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-          />
-          <button
-            onClick={clearSignature}
-            className="text-sm text-red-600 mt-2"
-          >
-            Limpiar firma
-          </button>
+          <p className="text-sm font-medium mb-2">
+            Firma del propietario
+          </p>
+
+          <SignaturePad onChange={setSignature} />
         </div>
 
-        {/* Acciones */}
         <div className="flex justify-end gap-3 pt-4">
           <button
             onClick={onClose}

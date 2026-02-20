@@ -1,147 +1,131 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
-import { OwnerEditModal } from "@/components/owners/owner-edit-modal"
-import { PetFormModal } from "@/components/mascotas/pet-form-modal"
 import type { Owner } from "@/types/owner"
 import type { Pet } from "@/types/pet"
 
-/* ===============================
-   Helpers
-================================ */
-const createEmptyOwner = (): Owner => ({
-  id: "",
-  name: "",
-  lastName: "",
-  document: "",
-  birthDate: "",
-  city: "",
-  address: "",
-  phone: "",
-  email: "",
-  notes: "",
-  pets: [],
-})
+import {
+  getOwners,
+  createOwner,
+  updateOwner,
+  deleteOwner,
+} from "@/lib/firebase/owners"
 
-/* ===============================
-   Mock inicial
-================================ */
-const MOCK_OWNERS: Owner[] = [
-  {
-    id: "1",
-    name: "Ana",
-    lastName: "Pérez",
-    document: "12345678",
-    birthDate: "1990-05-12",
-    city: "Bogotá",
-    address: "Cra 12 #45-67",
-    phone: "3001234567",
-    email: "ana@email.com",
-    notes: "Cliente frecuente",
-   pets: [
-  {
-    id: "p1",
-    ownerId: "1",
-    name: "Luna",
-    species: "Perro",
-    breed: "Poodle",
-    sex: "Hembra",
-    heightCm: 35,
-    vaccinesUpToDate: true,
+import { getPets, createPet } from "@/lib/firebase/pets"
 
-    lastService: {
-      id: "sr1",
-      serviceId: "s2",
-      serviceName: "Medicados",
-      entryDate: "2025-01-20",
-    },
-  },
-]
-  },
-  {
-    id: "2",
-    name: "Carlos",
-    lastName: "Gómez",
-    document: "87654321",
-    birthDate: "1985-02-20",
-    city: "Medellín",
-    address: "Calle 8 #10-11",
-    phone: "3109876543",
-    email: "carlos@email.com",
-    notes: "",
-    pets: [
-  {
-    id: "p1",
-    ownerId: "1",
-    name: "Luna",
-    species: "Perro",
-    breed: "Poodle",
-    sex: "Hembra",
-    heightCm: 35,
-    vaccinesUpToDate: true,
+import { OwnerDetailsModal } from "@/components/owners/owner-details-modal"
+import { OwnerEditModal } from "@/components/owners/owner-edit-modal"
+import { PetFormModal } from "@/components/mascotas/pet-form-modal"
 
-    lastService: {
-      id: "sr1",
-      serviceId: "s2",
-      serviceName: "Medicados",
-      entryDate: "2025-01-20",
-    },
-  },
-]
-  },
-]
 export default function OwnersPage() {
-  const [owners, setOwners] = useState<Owner[]>(MOCK_OWNERS)
-  const [search, setSearch] = useState("")
-
-  const [creatingOwner, setCreatingOwner] = useState(false)
-  const [editingOwner, setEditingOwner] = useState<Owner | null>(null)
+  const [owners, setOwners] = useState<Owner[]>([])
+  const [pets, setPets] = useState<Pet[]>([])
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null)
-  const [creatingPetForOwner, setCreatingPetForOwner] =
-    useState<Owner | null>(null)
+  const [editingOwner, setEditingOwner] = useState<Owner | null>(null)
+  const [creatingPet, setCreatingPet] = useState(false)
+  const [search, setSearch] = useState("")
+  const [loading, setLoading] = useState(true)
 
   /* ===============================
-     Eliminar propietario
-  ================================ */
-  function handleDelete(owner: Owner) {
-    const msg =
-      owner.pets.length > 0
-        ? `Este propietario tiene ${owner.pets.length} mascota(s).\n\nAl eliminarlo, también se eliminarán sus mascotas.\n\n¿Deseas continuar?`
-        : `¿Seguro que deseas eliminar a ${owner.name} ${owner.lastName}?`
+   * Cargar data optimizada
+   * =============================== */
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true)
 
-    if (!confirm(msg)) return
+      const [ownersData, petsData] = await Promise.all([
+        getOwners(),
+        getPets(),
+      ])
 
-    setOwners(prev => prev.filter(o => o.id !== owner.id))
+      // Agrupar mascotas por ownerId
+      const petsByOwner: Record<string, Pet[]> = {}
+
+      petsData.forEach(pet => {
+        if (!petsByOwner[pet.ownerId]) {
+          petsByOwner[pet.ownerId] = []
+        }
+        petsByOwner[pet.ownerId].push(pet)
+      })
+
+      const ownersWithPets = ownersData.map(owner => ({
+        ...owner,
+        pets: petsByOwner[owner.id] ?? [],
+      }))
+
+      setOwners(ownersWithPets)
+      setPets(petsData)
+      setLoading(false)
+    }
+
+    loadData()
+  }, [])
+
+  /* ===============================
+   * Guardar propietario
+   * =============================== */
+  async function saveOwner(owner: Owner) {
+    const { pets, id, ...data } = owner
+
+    if (id) {
+      await updateOwner(owner)
+    } else {
+      await createOwner(data)
+    }
+
+    location.reload() // simple y consistente
   }
 
   /* ===============================
-     Filtro buscador
-  ================================ */
-  const filteredOwners = owners.filter(o => {
+   * Guardar mascota
+   * =============================== */
+  async function savePet(pet: Pet) {
+    await createPet(pet)
+    location.reload()
+  }
+
+  /* ===============================
+   * Filtro optimizado
+   * =============================== */
+  const filteredOwners = useMemo(() => {
     const term = search.toLowerCase()
-    return (
+
+    return owners.filter(o =>
       o.name.toLowerCase().includes(term) ||
       o.lastName.toLowerCase().includes(term) ||
       o.document.includes(term)
     )
-  })
+  }, [owners, search])
 
   return (
     <div className="min-h-screen bg-amber-50">
       <DashboardHeader />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+
+        {/* Header responsive */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold text-amber-900">
             Propietarios
           </h1>
 
           <button
-            onClick={() => setCreatingOwner(true)}
-            className="px-4 py-2 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600"
+            onClick={() =>
+              setEditingOwner({
+                id: "",
+                name: "",
+                lastName: "",
+                document: "",
+                birthDate: "",
+                city: "",
+                address: "",
+                phone: "",
+                email: "",
+                pets: [],
+              })
+            }
+            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl font-semibold w-full sm:w-auto"
           >
             + Nuevo propietario
           </button>
@@ -151,17 +135,17 @@ export default function OwnersPage() {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar propietario por nombre o cédula"
-          className="w-full max-w-md px-4 py-3 border rounded-md focus:ring-2 focus:ring-amber-300"
+          placeholder="Buscar por nombre o documento"
+          className="w-full sm:max-w-md px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-300"
         />
 
-        {/* Tabla */}
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <table className="w-full text-sm">
+        {/* Tabla responsive */}
+        <div className="bg-white rounded-xl shadow overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead className="bg-amber-100 text-amber-900">
               <tr>
                 <th className="text-left px-4 py-3">Nombre</th>
-                <th className="text-left px-4 py-3">Cédula</th>
+                <th className="text-left px-4 py-3">Documento</th>
                 <th className="text-left px-4 py-3">Teléfono</th>
                 <th className="text-center px-4 py-3">Mascotas</th>
                 <th className="text-center px-4 py-3">Acciones</th>
@@ -169,9 +153,28 @@ export default function OwnersPage() {
             </thead>
 
             <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                    Cargando propietarios...
+                  </td>
+                </tr>
+              )}
+
+              {!loading && filteredOwners.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                    No hay propietarios registrados
+                  </td>
+                </tr>
+              )}
+
               {filteredOwners.map(owner => (
-                <tr key={owner.id} className="border-t hover:bg-amber-50">
-                  <td className="px-4 py-3 font-medium">
+                <tr
+                  key={owner.id}
+                  className="border-t hover:bg-amber-50"
+                >
+                  <td className="px-4 py-3">
                     {owner.name} {owner.lastName}
                   </td>
                   <td className="px-4 py-3">{owner.document}</td>
@@ -179,15 +182,29 @@ export default function OwnersPage() {
                   <td className="px-4 py-3 text-center">
                     {owner.pets.length}
                   </td>
-                  <td className="px-4 py-3 text-center space-x-3">
+
+                  <td className="px-4 py-3 text-center space-x-3 whitespace-nowrap">
                     <button
                       onClick={() => setSelectedOwner(owner)}
                       className="text-amber-600 hover:underline"
                     >
                       Ver
                     </button>
+
                     <button
-                      onClick={() => handleDelete(owner)}
+                      onClick={() => setEditingOwner(owner)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        if (confirm("¿Eliminar este propietario?")) {
+                          await deleteOwner(owner.id)
+                          location.reload()
+                        }
+                      }}
                       className="text-red-600 hover:underline"
                     >
                       Eliminar
@@ -197,16 +214,8 @@ export default function OwnersPage() {
               ))}
             </tbody>
           </table>
-
-          {filteredOwners.length === 0 && (
-            <div className="text-center text-sm text-gray-500 py-6">
-              No se encontraron propietarios
-            </div>
-          )}
         </div>
       </main>
-
-      {/* ================= Modales ================= */}
 
       {selectedOwner && (
         <OwnerDetailsModal
@@ -216,82 +225,34 @@ export default function OwnersPage() {
             setEditingOwner(selectedOwner)
             setSelectedOwner(null)
           }}
-          onAddPet={() => {
-            setCreatingPetForOwner(selectedOwner)
-            setSelectedOwner(null)
-          }}
+          onAddPet={() => setCreatingPet(true)}
         />
-      )}
-
-      {creatingOwner && (
-          <OwnerEditModal
-            mode="create"
-            owner={createEmptyOwner()}
-            onClose={() => setCreatingOwner(false)}
-            onSave={(newOwner: Owner) => {
-              const createdOwner: Owner = {
-                ...newOwner,
-                id: crypto.randomUUID(),
-                pets: [],
-              }
-
-              // 1️⃣ Guardar en la tabla
-              setOwners(prev => [...prev, createdOwner])
-
-              // 2️⃣ Cerrar modal de propietario
-              setCreatingOwner(false)
-
-              // 3️⃣ 🔥 Abrir automáticamente agregar mascota
-              setCreatingPetForOwner(createdOwner)
-            }}
-          />
       )}
 
       {editingOwner && (
         <OwnerEditModal
           owner={editingOwner}
+          mode={editingOwner.id ? "edit" : "create"}
           onClose={() => setEditingOwner(null)}
-          onSave={(updated: Owner) => {
-            setOwners(prev =>
-              prev.map(o => (o.id === updated.id ? updated : o))
-            )
-            setEditingOwner(null)
-          }}
+          onSave={saveOwner}
         />
       )}
 
-      {creatingPetForOwner && (
+      {creatingPet && selectedOwner && (
         <PetFormModal
           mode="create"
           pet={{
             id: "",
+            ownerId: selectedOwner.id,
             name: "",
             species: "Perro",
-            breed: "",
             sex: "Macho",
-            heightCm: 42,
-            ownerId: creatingPetForOwner.id,
+            heightCm: 0,
             vaccinesUpToDate: false,
           }}
-          owners={owners}
-          onClose={() => setCreatingPetForOwner(null)}
-          onSave={(newPet) => {
-            const pet: Pet = {
-              ...newPet,
-              id: crypto.randomUUID(),
-              ownerId: creatingPetForOwner.id,
-            }
-
-            setOwners(prev =>
-              prev.map(o =>
-                o.id === creatingPetForOwner.id
-                  ? { ...o, pets: [...o.pets, pet] }
-                  : o
-              )
-            )
-
-            setCreatingPetForOwner(null)
-          }}
+          owners={[selectedOwner]}
+          onClose={() => setCreatingPet(false)}
+          onSave={savePet}
         />
       )}
     </div>

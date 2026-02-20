@@ -1,87 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { Owner } from "@/types/owner"
-import type { PetSummary } from "@/types/pet-summary"
+import type { Pet } from "@/types/pet"
+import { getOwners } from "@/lib/firebase/owners"
+import { getPets } from "@/lib/firebase/pets"
 
 interface SearchClientProps {
   onSelect: (owner: Owner) => void
 }
-
-const owners: Owner[] = [
-  {
-    id: "1",
-    name: "Ana",
-    lastName: "Gómez",
-    document: "12345678",
-    birthDate: "1990-01-01",
-    city: "Bogotá",
-    address: "Calle 1",
-    phone: "3000000000",
-    email: "ana@email.com",
-    pets: [
-      {
-        id: "p1",
-        name: "Luna",
-        species: "Perro",
-        breed: "Golden",
-        lastService: {
-          id: "s2",
-          serviceId: "s2",
-          serviceName: "Medicados",
-          entryDate: "2026-01-10",
-          specifications: { Bikini: "Medio", Cara: "Osito" },
-          observations: "Última nota",
-        },
-        ownerId: "",
-        sex: "Macho",
-        heightCm: 0,
-        vaccinesUpToDate: false
-      },
-      {
-        id: "p2",
-        name: "Milo",
-        species: "Gato",
-        breed: "Siames",
-        lastService: {
-          id: "s1",
-          serviceId: "s1",
-          serviceName: "Diamante",
-          entryDate: "2026-01-05",
-          specifications: { Bikini: "Alto", Cara: "Cachorro" },
-          observations: "Otro comentario",
-        },
-        ownerId: "",
-        sex: "Macho",
-        heightCm: 0,
-        vaccinesUpToDate: false
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Carlos",
-    lastName: "Pérez",
-    document: "87654321",
-    birthDate: "1985-01-01",
-    city: "Medellín",
-    address: "Calle 2",
-    phone: "3100000000",
-    email: "carlos@email.com",
-    pets: [],
-  },
-]
-
 export function SearchClient({ onSelect }: SearchClientProps) {
   const [query, setQuery] = useState("")
+  const [owners, setOwners] = useState<Owner[]>([])
 
-  const results = owners.filter((owner) => {
+  useEffect(() => {
+    async function loadData() {
+      const ownersDb = await getOwners()
+      const petsDb = await getPets()
+
+      // unir mascotas a cada owner
+      const ownersWithPets = ownersDb.map(owner => ({
+        ...owner,
+        pets: petsDb.filter(pet => pet.ownerId === owner.id),
+      }))
+
+      setOwners(ownersWithPets)
+    }
+
+    loadData()
+  }, [])
+
+  const results = owners.filter(owner => {
     const search = query.toLowerCase()
+
     return (
-      owner.id.includes(search) ||
       owner.name.toLowerCase().includes(search) ||
       owner.document.includes(search) ||
-      owner.pets.some((pet: PetSummary) =>
+      owner.pets.some(pet =>
         pet.name.toLowerCase().includes(search)
       )
     )
@@ -96,34 +51,36 @@ export function SearchClient({ onSelect }: SearchClientProps) {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="ID, nombre, documento o mascota"
+        placeholder="Nombre, documento o mascota"
         className="w-full border rounded-xl px-4 py-2"
       />
 
       {query && results.length === 0 && (
-        <p className="text-sm text-gray-500">No se encontró ningún cliente</p>
+        <p className="text-sm text-gray-500">
+          No se encontró ningún cliente
+        </p>
       )}
 
       <div className="space-y-2">
-        {results.map((owner) => (
+        {results.map(owner => (
           <button
             key={owner.id}
             onClick={() => onSelect(owner)}
             className="w-full text-left p-3 rounded-xl border hover:bg-amber-50"
           >
-            <p className="font-semibold">{owner.name} {owner.lastName}</p>
+            <p className="font-semibold">
+              {owner.name} {owner.lastName}
+            </p>
+
             <p className="text-sm text-gray-600">
               {owner.document} · {owner.pets.length} mascotas
             </p>
 
             {owner.pets.length > 0 && (
               <ul className="text-sm text-gray-500 mt-1 space-y-1">
-                {owner.pets.map((pet) => (
+                {owner.pets.map(pet => (
                   <li key={pet.id}>
-                    {pet.name}{" "}
-                    {pet.lastService
-                      ? `(Último servicio: ${pet.lastService.serviceName})`
-                      : ""}
+                    {pet.name}
                   </li>
                 ))}
               </ul>

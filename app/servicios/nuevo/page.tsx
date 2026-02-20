@@ -9,17 +9,12 @@ import { PetSummaryCard } from "@/components/servicios/pet-summary"
 import type { ServiceRecord } from "@/types/service-record"
 import { useRouter } from "next/navigation"
 import type { Owner } from "@/types/owner"
-import type { PetSummary } from "@/types/pet-summary"
+import { createServiceRecord } from "@/lib/firebase/service-record"
+import { getPetsByOwner } from "@/lib/firebase/pets"
+import type { Pet } from "@/types/pet"
+import { getServices } from "@/lib/firebase/services"
+import type { Service } from "@/types/service"
 
-/* ===============================
-   Servicios disponibles
-================================ */
-const AVAILABLE_SERVICES = [
-  { id: "s1", name: "Diamante" },
-  { id: "s2", name: "Medicados" },
-  { id: "s3", name: "Reina" },
-  { id: "s4", name: "Volumen" },
-]
 
 /* ===============================
    Especificaciones FIJAS
@@ -56,7 +51,8 @@ const SPEC_DEFINITIONS: SpecDefinition[] = [
 ================================ */
 export default function NuevoServicioPage() {
   const [owner, setOwner] = useState<Owner | null>(null)
-  const [pet, setPet] = useState<PetSummary | null>(null)
+  const [pets, setPets] = useState<Pet[]>([])
+  const [pet, setPet] = useState<Pet | null>(null)
 
   const [serviceId, setServiceId] = useState<string | null>(null)
   const [specifications, setSpecifications] = useState<string[]>([])
@@ -66,16 +62,18 @@ export default function NuevoServicioPage() {
   const [specValue, setSpecValue] = useState("")
   const [repeatService, setRepeatService] = useState(false)
   const [receivedBy, setReceivedBy] = useState("")
+  const [services, setServices] = useState<Service[]>([])
 
   const router = useRouter()
-  const validServiceSelected =
-    serviceId !== null &&
-    AVAILABLE_SERVICES.some(s => s.id === serviceId)
 
   const canSave =
     !!pet &&
     !!serviceId &&
     receivedBy.trim().length > 0
+
+    useEffect(() => {
+  getServices().then(setServices)
+}, [])
 
   /* ===============================
      Efecto para autocompletar último servicio
@@ -98,17 +96,17 @@ export default function NuevoServicioPage() {
     }
   }, [repeatService, pet])
 
+
   /* ===============================
      Guardar servicio
   ================================= */
-  function handleSave() {
+async function handleSave() {
   if (!owner || !pet || !serviceId || !receivedBy.trim()) return
 
   const now = new Date()
+  const selectedService = services.find(s => s.id === serviceId)
 
-  const record: ServiceRecord = {
-    id: crypto.randomUUID(),
-
+  const record: Omit<ServiceRecord, "id"> = {
     petId: pet.id,
     petName: pet.name,
 
@@ -120,8 +118,9 @@ export default function NuevoServicioPage() {
     receivedBy,
 
     serviceId,
-    serviceName:
-      AVAILABLE_SERVICES.find(s => s.id === serviceId)?.name ?? "Servicio",
+    
+
+      serviceName: selectedService?.name ?? "Servicio",
 
     specifications: specifications.reduce<Record<string, string>>(
       (acc, item) => {
@@ -133,25 +132,13 @@ export default function NuevoServicioPage() {
     ),
 
     observations: notes,
-    completed: false,
+    status: "EN_PROCESO",
   }
 
-  // 1️⃣ Guardar en localStorage
-  const existing = JSON.parse(
-    localStorage.getItem("dailyServices") || "[]"
-  )
-
-  localStorage.setItem(
-    "dailyServices",
-    JSON.stringify([record, ...existing])
-  )
-
-  // 2️⃣ Guardar el último para abrir el modal
-  localStorage.setItem("lastServiceRecord", JSON.stringify(record))
-
-  // 3️⃣ Ir al Home
+  await createServiceRecord(record)
   router.push("/home")
 }
+
 
   /* ===============================
      Eliminar especificación
@@ -164,7 +151,15 @@ export default function NuevoServicioPage() {
     <div className="min-h-screen bg-amber-50 p-6 space-y-6">
 
       {/* PASO 1 – Buscar cliente */}
-      <SearchClient onSelect={setOwner} />
+      <SearchClient
+        onSelect={async (selectedOwner) => {
+          setOwner(selectedOwner)
+          setPet(null)
+
+          const petsDb = await getPetsByOwner(selectedOwner.id)
+          setPets(petsDb)
+        }}
+      />
 
       {/* PASO 2 – Seleccionar mascota */}
       {owner && (
@@ -180,7 +175,7 @@ export default function NuevoServicioPage() {
             </p>
           ) : (
             <PetSelector
-              pets={owner.pets}
+              pets={pets}
               selectedPet={pet}
               onSelect={(selectedPet) => {
                 setPet(selectedPet)
@@ -222,7 +217,7 @@ export default function NuevoServicioPage() {
       {/* PASO 4 – Servicio */}
       {pet && (
         <ServiceSelector
-          services={AVAILABLE_SERVICES}
+          services={services}
           selected={serviceId}
           onChange={setServiceId}
         />
