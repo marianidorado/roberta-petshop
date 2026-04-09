@@ -149,7 +149,7 @@ async function handleSave() {
       ownerId: owner.id,
       ownerName: `${owner.name} ${owner.lastName}`,
 
-      entryDate: now.toISOString().split("T")[0],
+      entryDate: new Date().toLocaleDateString("sv-SE"),
       entryTime: now.toTimeString().slice(0, 5),
       receivedBy,
 
@@ -177,11 +177,20 @@ async function handleSave() {
 
     router.replace("/home")
 
-  } catch (error) {
-    console.error("Error guardando servicio:", error)
-  } finally {
-    setSaving(false)
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    if (error.message.includes("ya fue registrado")) {
+      alert("⚠️ Esta mascota ya tiene un servicio registrado hoy")
+      return
+    }
+
+    console.error("Error guardando servicio:", error.message)
+  } else {
+    console.error("Error desconocido:", error)
   }
+
+  alert("Ocurrió un error inesperado. Intenta nuevamente.")
+}
 }
 
 

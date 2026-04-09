@@ -13,11 +13,22 @@ import type { ServiceRecord } from "@/types/service-record"
 
 const serviceRecordsRef = collection(db, "serviceRecords")
 
+function getTodayLocalDate(): string {
+  const now = new Date()
+
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
 /* Crear servicio */
 export async function createServiceRecord(
   record: Omit<ServiceRecord, "id">
 ): Promise<string> {
 
+  record.entryDate = record.entryDate || getTodayLocalDate()
   // 🔍 VALIDAR SI YA EXISTE
   const q = query(
     serviceRecordsRef,
@@ -27,9 +38,15 @@ export async function createServiceRecord(
 
   const snapshot = await getDocs(q)
 
-  if (!snapshot.empty) {
-    throw new Error("Este servicio ya fue registrado hoy para esta mascota")
-  }
+// ✅ Validar solo servicios NO cancelados
+const existing = snapshot.docs.find(doc => {
+  const data = doc.data() as { status?: string }
+  return data.status !== "CANCELADO"
+})
+
+if (existing) {
+  throw new Error("DUPLICATE_SERVICE")
+}
 
   // ✅ CREAR SI NO EXISTE
   const docRef = await addDoc(serviceRecordsRef, record)
@@ -51,7 +68,7 @@ export async function createServiceRecord(
 
 /* Obtener servicios del día */
 export async function getTodayServiceRecords(): Promise<ServiceRecord[]> {
-  const todayString = new Date().toLocaleDateString("sv-SE")
+  const todayString = getTodayLocalDate()
 
   const q = query(
     serviceRecordsRef,
