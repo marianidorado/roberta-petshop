@@ -1,6 +1,6 @@
 "use client"
 
-export type ServiceStatus = "EN_PROCESO" | "LISTO" | "ENTREGADO"
+export type ServiceStatus = "EN_PROCESO" | "LISTO" | "ENTREGADO" | "CANCELADO"
 
 export interface Row {
   id: string
@@ -18,9 +18,11 @@ interface PetsTableProps {
   rows: Row[]
   onMarkReady: (id: string) => void
   onDeliver: (id: string) => void
+  onCancel: (id: string) => void
+  onRowClick: (id: string) => void
 }
 
-export function PetsTable({ rows, onMarkReady, onDeliver }: PetsTableProps) {
+export function PetsTable({ rows, onMarkReady, onDeliver, onCancel, onRowClick }: PetsTableProps){
 
   return (
     <div className="overflow-x-auto bg-white rounded-xl shadow border border-slate-200">
@@ -39,7 +41,7 @@ export function PetsTable({ rows, onMarkReady, onDeliver }: PetsTableProps) {
 
         <tbody className="divide-y divide-slate-200">
           {rows.map(row => (
-            <tr key={row.id} className="hover:bg-slate-50">
+            <tr key={row.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => onRowClick(row.id)}>
               <td className="px-4 py-3 font-medium">{row.code}</td>
               <td className="px-4 py-3">{row.pet}</td>
               <td className="px-4 py-3">{row.owner}</td>
@@ -62,17 +64,34 @@ export function PetsTable({ rows, onMarkReady, onDeliver }: PetsTableProps) {
 
               <td className="px-4 py-3 text-center space-x-2">
                 {row.status === "EN_PROCESO" && (
-                  <button
-                    onClick={() => onMarkReady(row.id)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Marcar listo
-                  </button>
-                )}
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMarkReady(row.id)
+                  }}
+                  className="text-blue-600 hover:underline"
+                >
+                  Marcar listo
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCancel(row.id)
+                  }}
+                  className="text-red-600 hover:underline"
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
 
                 {row.status === "LISTO" && (
                   <button
-                    onClick={() => onDeliver(row.id)}
+                    onClick={(e) => {
+                      e.stopPropagation() 
+                      onDeliver(row.id)}}
                     className="text-green-600 hover:underline"
                   >
                     Entregar

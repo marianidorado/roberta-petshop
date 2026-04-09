@@ -14,6 +14,10 @@ import { getPetsByOwner } from "@/lib/firebase/pets"
 import type { Pet } from "@/types/pet"
 import { getServices } from "@/lib/firebase/services"
 import type { Service } from "@/types/service"
+import { useUser } from "@/context/UserContext"
+import { getUserProfile } from "@/lib/firebase/users"
+import { DashboardHeader } from "@/components/dashboard-header"
+import type { UserProfile } from "@/lib/firebase/users"
 
 
 /* ===============================
@@ -24,6 +28,7 @@ type SpecDefinition = {
   options?: string[]
   requiresInput?: boolean
 }
+
 
 const SPEC_DEFINITIONS: SpecDefinition[] = [
   { label: "Aseo básico" },
@@ -50,9 +55,11 @@ const SPEC_DEFINITIONS: SpecDefinition[] = [
    PAGE
 ================================ */
 export default function NuevoServicioPage() {
+  const { user } = useUser()
   const [owner, setOwner] = useState<Owner | null>(null)
   const [pets, setPets] = useState<Pet[]>([])
   const [pet, setPet] = useState<Pet | null>(null)
+  
 
   const [serviceId, setServiceId] = useState<string | null>(null)
   const [specifications, setSpecifications] = useState<string[]>([])
@@ -61,20 +68,31 @@ export default function NuevoServicioPage() {
   const [activeSpec, setActiveSpec] = useState<SpecDefinition | null>(null)
   const [specValue, setSpecValue] = useState("")
   const [repeatService, setRepeatService] = useState(false)
-  const [receivedBy, setReceivedBy] = useState("")
   const [services, setServices] = useState<Service[]>([])
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const router = useRouter()
+useEffect(() => {
+  async function loadUser() {
+    if (!user?.uid) return
+
+    const profile = await getUserProfile(user.uid)
+
+    if (profile) {
+      setUserProfile(profile)
+    }
+  }
+
+  loadUser()
+}, [user])
+
+const receivedBy = userProfile?.name ?? "Recepción"
 
   const canSave =
-    !!pet &&
-    !!serviceId &&
-    receivedBy.trim().length > 0
-
-    useEffect(() => {
-  getServices().then(setServices)
-}, [])
-
+  !!pet &&
+  !!serviceId &&
+  !!receivedBy
   /* ===============================
      Efecto para autocompletar último servicio
      solo si se presiona "Repetir servicio"
@@ -85,58 +103,85 @@ export default function NuevoServicioPage() {
       const timeout = setTimeout(() => {
         setServiceId(pet.lastService!.serviceId)
         if (pet.lastService!.specifications) {
-          const specsArr = Object.entries(pet.lastService!.specifications).map(
-            ([key, value]) => `${key}: ${value}`
-          )
-          setSpecifications(specsArr)
-        }
+          const specsArr = Object.entries(
+            pet.lastService!.specifications
+          ).map(([key, value]) => {
+            if (value === "Sí") return key
+            return `${key}: ${value}`
+          })
+
+            setSpecifications(specsArr)
+          }
       }, 0)
 
       return () => clearTimeout(timeout)
     }
   }, [repeatService, pet])
+  
+  useEffect(() => {
+  async function loadServices() {
+    const data = await getServices()
+    setServices(data)
+  }
+
+  loadServices()
+}, [])
 
 
   /* ===============================
      Guardar servicio
   ================================= */
 async function handleSave() {
+  if (saving) return
+
   if (!owner || !pet || !serviceId || !receivedBy.trim()) return
 
-  const now = new Date()
-  const selectedService = services.find(s => s.id === serviceId)
+  setSaving(true)
 
-  const record: Omit<ServiceRecord, "id"> = {
-    petId: pet.id,
-    petName: pet.name,
+  try {
+    const now = new Date()
+    const selectedService = services.find(s => s.id === serviceId)
 
-    ownerId: owner.id,
-    ownerName: `${owner.name} ${owner.lastName}`,
+    const record: Omit<ServiceRecord, "id"> = {
+      petId: pet.id,
+      petName: pet.name,
 
-    entryDate: now.toISOString().split("T")[0],
-    entryTime: now.toTimeString().slice(0, 5),
-    receivedBy,
+      ownerId: owner.id,
+      ownerName: `${owner.name} ${owner.lastName}`,
 
-    serviceId,
-    
+      entryDate: now.toISOString().split("T")[0],
+      entryTime: now.toTimeString().slice(0, 5),
+      receivedBy,
 
+      serviceId,
       serviceName: selectedService?.name ?? "Servicio",
 
-    specifications: specifications.reduce<Record<string, string>>(
-      (acc, item) => {
-        const [key, value] = item.split(":").map(v => v.trim())
-        acc[key] = value ?? "Sí"
-        return acc
-      },
-      {}
-    ),
+      specifications: specifications.reduce<Record<string, string>>(
+        (acc, item) => {
+          if (item.includes(":")) {
+            const [key, value] = item.split(":").map(v => v.trim())
+            acc[key] = value || "Sí"
+          } else {
+            acc[item] = "Sí"
+          }
+          return acc
+        },
+        {}
+      ),
 
-    observations: notes,
-    status: "EN_PROCESO",
+      observations: notes,
+      status: "EN_PROCESO",
+    }
+
+    await createServiceRecord(record)
+
+    router.replace("/home")
+
+  } catch (error) {
+    console.error("Error guardando servicio:", error)
+  } finally {
+    setSaving(false)
   }
-
-  await createServiceRecord(record)
-  router.push("/home")
 }
 
 
@@ -149,6 +194,7 @@ async function handleSave() {
 
   return (
     <div className="min-h-screen bg-amber-50 p-6 space-y-6">
+      <DashboardHeader></DashboardHeader>
 
       {/* PASO 1 – Buscar cliente */}
       <SearchClient
@@ -168,27 +214,22 @@ async function handleSave() {
           <p className="font-bold text-gray-800">
             {owner.name} {owner.lastName}
           </p>
-
-          {owner.pets.length === 0 ? (
-            <p className="text-sm text-gray-600">
-              Este cliente no tiene mascotas registradas
-            </p>
-          ) : (
-            <PetSelector
-              pets={pets}
-              selectedPet={pet}
-              onSelect={(selectedPet) => {
-                setPet(selectedPet)
-                // Limpiar todo inmediatamente al elegir la mascota
-                setServiceId(null)
-                setSpecifications([])
-                setNotes("")
-                setActiveSpec(null)
-                setSpecValue("")
-                setRepeatService(false)
-              }}
-            />
-          )}
+            {pets.length > 0 && (
+              <PetSelector
+                pets={pets}
+                selectedPet={pet}
+                onSelect={(selectedPet) => {
+                  setPet(selectedPet)
+                  setServiceId(null)
+                  setSpecifications([])
+                  setNotes("")
+                  setActiveSpec(null)
+                  setSpecValue("")
+                  setRepeatService(false)
+                }}
+              />
+            )}
+          
         </div>
       )}
 
@@ -201,10 +242,14 @@ async function handleSave() {
         setServiceId(pet.lastService.serviceId)
 
         // Autocompleta especificaciones SOLO aquí
-        if (pet.lastService.specifications) {
+       if (pet.lastService.specifications) {
           const specsArr = Object.entries(
             pet.lastService.specifications
-          ).map(([key, value]) => `${key}: ${value}`)
+          ).map(([key, value]) => {
+            if (value === "Sí") return key
+            return `${key}: ${value}`
+          })
+
           setSpecifications(specsArr)
         }
 
@@ -331,12 +376,10 @@ async function handleSave() {
           <label className="text-sm font-semibold text-gray-700">
             ¿Quién recibe la mascota?
           </label>
-
-          <input
-            value={receivedBy}
-            onChange={e => setReceivedBy(e.target.value)}
-            placeholder="Nombre de la persona responsable"
-            className="w-full border rounded-xl p-3"
+         <input
+            value={userProfile?.name ?? ""}
+            disabled
+            className="w-full border rounded-xl p-3 bg-gray-100 text-gray-600 cursor-not-allowed"
           />
 
           <p className="text-xs text-gray-500">
@@ -353,7 +396,7 @@ async function handleSave() {
       {pet && (
         <div className="pt-4">
           <button
-            disabled={!canSave}
+            disabled={!canSave || saving}
             onClick={handleSave}
             className={`w-full py-3 rounded-xl font-semibold text-white
               ${

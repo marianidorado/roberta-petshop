@@ -42,7 +42,21 @@ export async function deletePet(id: string) {
 }
 
 export async function createPet(pet: Pet) {
+
   const { id, ...data } = pet
+
+  // 🔍 Validar duplicado: misma mascota + mismo dueño
+  const q = query(
+    petsRef,
+    where("ownerId", "==", data.ownerId),
+    where("name", "==", data.name)
+  )
+
+  const snapshot = await getDocs(q)
+
+  if (!snapshot.empty) {
+    throw new Error("Esta mascota ya existe para este propietario")
+  }
 
   const docRef = await addDoc(
     petsRef,

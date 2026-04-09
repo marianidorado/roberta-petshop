@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { PetDetailsModal } from "@/components/mascotas/pet-details-modal"
 import { PetFormModal } from "@/components/mascotas/pet-form-modal"
-
+import { useUser } from "@/context/UserContext"
 import type { Pet } from "@/types/pet"
 import type { Owner } from "@/types/owner"
 import type { ServiceRecord, ServiceRecordSummary } from "@/types/service-record"
@@ -39,11 +39,11 @@ export default function PetsPage() {
   const [pets, setPets] = useState<Pet[]>([])
   const [services, setServices] = useState<ServiceRecord[]>([])
   const [owners, setOwners] = useState<Owner[]>([])
-
   const [editingPet, setEditingPet] = useState<Pet | null>(null)
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null)
   const [creatingPet, setCreatingPet] = useState(false)
   const [search, setSearch] = useState("")
+  const user = useUser()
 
   /* ===============================
      LOAD DATA
@@ -202,15 +202,27 @@ export default function PetsPage() {
                     >
                       Ver
                     </button>
-                    <button
-                      onClick={async () => {
-                        await deletePet(pet.id)
-                        setPets(prev => prev.filter(p => p.id !== pet.id))
-                      }}
-                      className="text-red-600 hover:underline"
-                    >
-                      Eliminar
-                    </button>
+                    {user?.role === "admin" && (
+                      <button
+                        onClick={async () => {
+                          const confirmDelete = confirm("¿Eliminar esta mascota?")
+                          if (!confirmDelete) return
+
+                          try {
+                            await deletePet(pet.id)
+
+                            setPets(prev => prev.filter(p => p.id !== pet.id))
+
+                          } catch (error) {
+                            console.error("Error eliminando:", error)
+                            alert("No se pudo eliminar la mascota")
+                          }
+                        }}
+                        className="text-red-600 hover:underline"
+                      >
+                        Eliminar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -240,9 +252,22 @@ export default function PetsPage() {
           owners={owners}
           onClose={() => setCreatingPet(false)}
           onSave={async newPet => {
-            const id = await createPet(newPet)
-            setPets(prev => [...prev, { ...newPet, id }])
-            setCreatingPet(false)
+            try {
+              const id = await createPet(newPet)
+
+              setPets(prev => {
+                // 🔒 evitar duplicado en UI
+                if (prev.some(p => p.id === id)) return prev
+
+                return [...prev, { ...newPet, id }]
+              })
+
+              setCreatingPet(false)
+
+            } catch (error) {
+              console.error("Error creando mascota:", error)
+              alert(error instanceof Error ? error.message : "Error al crear mascota")
+            }
           }}
         />
       )}
@@ -254,11 +279,19 @@ export default function PetsPage() {
           owners={owners}
           onClose={() => setEditingPet(null)}
           onSave={async updated => {
-            await updatePet(updated)
-            setPets(prev =>
-              prev.map(p => (p.id === updated.id ? updated : p))
-            )
-            setEditingPet(null)
+            try {
+              await updatePet(updated)
+
+              setPets(prev =>
+                prev.map(p => (p.id === updated.id ? updated : p))
+              )
+
+              setEditingPet(null)
+
+            } catch (error) {
+              console.error("Error actualizando:", error)
+              alert("No se pudo actualizar la mascota")
+            }
           }}
         />
       )}

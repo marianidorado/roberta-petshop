@@ -17,6 +17,21 @@ const serviceRecordsRef = collection(db, "serviceRecords")
 export async function createServiceRecord(
   record: Omit<ServiceRecord, "id">
 ): Promise<string> {
+
+  // 🔍 VALIDAR SI YA EXISTE
+  const q = query(
+    serviceRecordsRef,
+    where("petId", "==", record.petId),
+    where("entryDate", "==", record.entryDate)
+  )
+
+  const snapshot = await getDocs(q)
+
+  if (!snapshot.empty) {
+    throw new Error("Este servicio ya fue registrado hoy para esta mascota")
+  }
+
+  // ✅ CREAR SI NO EXISTE
   const docRef = await addDoc(serviceRecordsRef, record)
 
   await updateDoc(doc(db, "pets", record.petId), {
@@ -36,13 +51,7 @@ export async function createServiceRecord(
 
 /* Obtener servicios del día */
 export async function getTodayServiceRecords(): Promise<ServiceRecord[]> {
-  const now = new Date()
-  const todayString =
-    now.getFullYear() +
-    "-" +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(now.getDate()).padStart(2, "0")
+  const todayString = new Date().toLocaleDateString("sv-SE")
 
   const q = query(
     serviceRecordsRef,
@@ -68,12 +77,29 @@ export async function markServiceReady(id: string) {
 export async function deliverService(
   id: string,
   exitTime: string,
-  ownerSignature?: string
+  ownerSignature?: string,
+  exitObservation?: string
 ) {
   await updateDoc(doc(db, "serviceRecords", id), {
     status: "ENTREGADO",
     exitTime,
     ownerSignature: ownerSignature ?? null,
+    metadata: {
+     exitObservation: exitObservation ?? ""
+    }
+  })
+}
+/* Cancelar servicio */
+export async function cancelService(
+  id: string,
+  reason: string
+) {
+  await updateDoc(doc(db, "serviceRecords", id), {
+    status: "CANCELADO",
+
+    metadata: {
+      cancelReason: reason
+    }
   })
 }
 /* Obtener todos los servicios */

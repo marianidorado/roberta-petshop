@@ -20,6 +20,9 @@ export const ICON_PATHS = {
 
   close:
     "M6 18L18 6M6 6l12 12",
+
+    report:
+      "M3 13h18M3 6h18M3 18h12", // icono tipo reporte
 }
 
 export const iconPaths = {

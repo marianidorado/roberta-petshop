@@ -2,9 +2,11 @@
 
 import { initializeApp } from "firebase/app"
 import { getFirestore } from "firebase/firestore"
+import { getStorage } from "firebase/storage"
+import { getAuth } from "firebase/auth"
 
 // 🔐 Configuración de tu proyecto Firebase
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyBo1sQYbNqgdhdKJ7EkmcHIJw44MOuIMUU",
   authDomain: "roberta-petshop.firebaseapp.com",
   projectId: "roberta-petshop",
@@ -16,5 +18,7 @@ const firebaseConfig = {
 // 🚀 Inicializar Firebase
 const app = initializeApp(firebaseConfig)
 
-// 📦 Base de datos (Firestore)
+// 📦 Servicios Firebase
 export const db = getFirestore(app)
+export const storage = getStorage(app)
+export const auth = getAuth(app)   

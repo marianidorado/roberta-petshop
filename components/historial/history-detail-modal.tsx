@@ -112,6 +112,16 @@ const serviceInfo = services.find(
             label="Hora de salida"
             value={record.exitTime || "Pendiente"}
           />
+          {record.metadata?.exitObservation && (
+            <div className="col-span-2">
+              <p className="text-sm font-medium text-slate-600 mb-1">
+                Observación al entregar
+              </p>
+              <p className="text-sm text-slate-700 bg-slate-50 border rounded p-2">
+                {record.metadata.exitObservation}
+              </p>
+            </div>
+          )}
 
           {record.ownerSignature && (
             <div className="col-span-2">

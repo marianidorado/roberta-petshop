@@ -50,8 +50,13 @@
     exitTime?: string        // HH:mm
     ownerSignature?: string // Base64 / URL / referencia a archivo
 
+    metadata?: {
+      cancelReason?: string
+      exitObservation?: string
+    }
+
     /* ===============================
     * Estado
     * =============================== */
-    status: "EN_PROCESO" | "LISTO" | "ENTREGADO"
+    status: "EN_PROCESO" | "LISTO" | "ENTREGADO" | "CANCELADO"
   }

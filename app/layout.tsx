@@ -1,5 +1,6 @@
 import "./globals.css"
 import type { Metadata } from "next"
+import { UserProvider } from "@/context/UserContext"
 
 export const metadata: Metadata = {
   title: "Roberta Pet Shop",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="font-sans antialiased">
-        {children}
+        <UserProvider>
+          {children}
+        </UserProvider>
       </body>
     </html>
   )

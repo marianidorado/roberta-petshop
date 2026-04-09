@@ -13,6 +13,7 @@ export type PetAttitude =
   | "Agresivo"
 
 export interface Pet {
+  heightCm: any
   id: string
 
   /* ===============================
@@ -27,7 +28,7 @@ export interface Pet {
   species: PetSpecies
   breed?: string
   sex: PetSex
-  heightCm: number        // ÚNICA fuente de tamaño
+  heightRange?: "0-20" | "20-40" | "40-60" | "60-70" | "70+"
   color?: string
 
   /* ===============================
