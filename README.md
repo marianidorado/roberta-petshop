@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐾 Roberta Petshop – Sistema de Gestión para Negocio Real
 
-## Getting Started
+Aplicación web desarrollada para la **gestión completa de un petshop real**, permitiendo administrar productos, clientes y pedidos en tiempo real.
 
-First, run the development server:
+## 🚀 Funcionalidades principales
+
+* 🔐 Autenticación de usuarios con Firebase Auth
+* 📦 Gestión de productos (crear, editar, eliminar)
+* 👥 Gestión de clientes
+* 🛒 Registro y control de pedidos
+* 📊 Panel administrativo
+* 🔄 Persistencia de datos en tiempo real con Firebase
+
+## 💡 Problema que resuelve
+
+Este sistema permite a un negocio de petshop organizar su operación diaria, evitando el manejo manual de información y mejorando el control de inventario y ventas.
+
+## 🛠️ Tecnologías utilizadas
+
+* Next.js
+* JavaScript / TypeScript
+* Firebase (Authentication + Firestore)
+* CSS / Responsive Design
+
+## 🌐 Demo en vivo
+[
+👉 https://TU-LINK-AQUI](https://roberta-petshop--roberta-petshop.us-central1.hosted.app/)
+
+## 📸 Vista del sistema
+<img width="961" height="804" alt="image" src="https://github.com/user-attachments/assets/537e4380-446d-414d-bfd1-44f016aa9cfc" />
+<img width="1779" height="842" alt="image" src="https://github.com/user-attachments/assets/0ce4df29-cb55-4878-8701-26d377352212" />
+<img width="1649" height="773" alt="image" src="https://github.com/user-attachments/assets/484a8dbf-057d-414c-b574-19a8c696ada4" />
+
+
+## ⚙️ Instalación y ejecución local
 
 ```bash
+git clone https://github.com/marianidorado/roberta-petshop.git
+cd roberta-petshop
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📌 Estado del proyecto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+✅ Proyecto en uso por negocio real
+🔄 En mejora continua
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 👩‍💻 Autora
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Leidy Mariani Dorado
+Desarrolladora Frontend
