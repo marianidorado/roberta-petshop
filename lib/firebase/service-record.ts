@@ -13,10 +13,42 @@ import type { ServiceRecord } from "@/types/service-record"
 
 const serviceRecordsRef = collection(db, "serviceRecords")
 
+function getTodayLocalDate(): string {
+  const now = new Date()
+
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
 /* Crear servicio */
 export async function createServiceRecord(
   record: Omit<ServiceRecord, "id">
 ): Promise<string> {
+
+  record.entryDate = record.entryDate || getTodayLocalDate()
+  // 🔍 VALIDAR SI YA EXISTE
+  const q = query(
+    serviceRecordsRef,
+    where("petId", "==", record.petId),
+    where("entryDate", "==", record.entryDate)
+  )
+
+  const snapshot = await getDocs(q)
+
+// ✅ Validar solo servicios NO cancelados
+const existing = snapshot.docs.find(doc => {
+  const data = doc.data() as { status?: string }
+  return data.status !== "CANCELADO"
+})
+
+if (existing) {
+  throw new Error("DUPLICATE_SERVICE")
+}
+
+  // ✅ CREAR SI NO EXISTE
   const docRef = await addDoc(serviceRecordsRef, record)
 
   await updateDoc(doc(db, "pets", record.petId), {
@@ -36,13 +68,7 @@ export async function createServiceRecord(
 
 /* Obtener servicios del día */
 export async function getTodayServiceRecords(): Promise<ServiceRecord[]> {
-  const now = new Date()
-  const todayString =
-    now.getFullYear() +
-    "-" +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(now.getDate()).padStart(2, "0")
+  const todayString = getTodayLocalDate()
 
   const q = query(
     serviceRecordsRef,
@@ -68,12 +94,27 @@ export async function markServiceReady(id: string) {
 export async function deliverService(
   id: string,
   exitTime: string,
-  ownerSignature?: string
+  ownerSignature?: string,
+  exitObservation?: string
 ) {
   await updateDoc(doc(db, "serviceRecords", id), {
     status: "ENTREGADO",
     exitTime,
     ownerSignature: ownerSignature ?? null,
+    "metadata.exitObservation": exitObservation ?? ""
+  })
+}
+/* Cancelar servicio */
+export async function cancelService(
+  id: string,
+  reason: string
+) {
+  await updateDoc(doc(db, "serviceRecords", id), {
+    status: "CANCELADO",
+
+    metadata: {
+      cancelReason: reason
+    }
   })
 }
 /* Obtener todos los servicios */

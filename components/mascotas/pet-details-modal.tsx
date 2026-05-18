@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import type { Pet } from "@/types/pet"
 
 interface Props {
@@ -27,11 +28,35 @@ export function PetDetailsModal({
   onClose,
   onEdit,
 }: Props) {
+
   const router = useRouter()
 
+  /* ESC para cerrar */
+  useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose()
+    }
+
+    document.addEventListener("keydown", handleEsc)
+
+    return () => {
+      document.removeEventListener("keydown", handleEsc)
+    }
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto space-y-5">
+
+    /* BACKDROP */
+    <div
+      onClick={onClose}
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+    >
+
+      {/* MODAL */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-xl p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto space-y-5"
+      >
 
         <div className="flex items-center gap-4">
           <Image
@@ -55,10 +80,13 @@ export function PetDetailsModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <p><strong>Sexo:</strong> {pet.sex}</p>
-          <p><strong>Tamaño:</strong> {pet.heightCm}</p>
+          <p>
+            <strong>Estatura:</strong> {pet.heightRange || "No registrada"}
+          </p>
           <p><strong>Color:</strong> {pet.color || "—"}</p>
           <p><strong>Nacimiento:</strong> {pet.birthDate || "—"}</p>
           <p><strong>Edad:</strong> {calculateAge(pet.birthDate)}</p>
+
           <p>
             <strong>Vacunas:</strong>{" "}
             {pet.vaccinesUpToDate ? "Al día" : "Pendientes"}
@@ -91,7 +119,10 @@ export function PetDetailsModal({
         </div>
 
         <div className="flex justify-end gap-3 pt-4">
-          <button onClick={onClose} className="px-4 py-2 border rounded">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded"
+          >
             Cerrar
           </button>
 
@@ -102,6 +133,7 @@ export function PetDetailsModal({
             Editar
           </button>
         </div>
+
       </div>
     </div>
   )

@@ -16,6 +16,7 @@ import {
   getTodayServiceRecords,
   markServiceReady,
   deliverService,
+  cancelService
 } from "@/lib/firebase/service-record"
 
 import type { Owner } from "@/types/owner"
@@ -30,31 +31,37 @@ export default function HomePage() {
   const [search, setSearch] = useState("")
   const [selectedRecord, setSelectedRecord] = useState<ServiceRecord | null>(null)
   const [delivering, setDelivering] = useState<ServiceRecord | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
-  useEffect(() => {
-    async function loadHomeData() {
-      try {
-        const [ownersDb, petsDb, servicesDb] = await Promise.all([
-          getOwners(),
-          getPets(),
-          getTodayServiceRecords(),
-        ])
+useEffect(() => {
+  if (loaded) return
 
-        setOwners(ownersDb)
-        setPets(petsDb)
-        setServiceRecords(servicesDb)
-      } catch (error) {
-        console.error("Error cargando Home:", error)
-      }
+  async function loadHomeData() {
+    try {
+      const [ownersDb, petsDb, servicesDb] = await Promise.all([
+        getOwners(),
+        getPets(),
+        getTodayServiceRecords(),
+      ])
+
+      setOwners(ownersDb)
+      setPets(petsDb)
+      setServiceRecords(servicesDb)
+
+      setLoaded(true)
+    } catch (error) {
+      console.error("Error cargando Home:", error)
     }
+  }
 
-    loadHomeData()
-  }, [])
+  loadHomeData()
+}, [loaded])
 
   /* Transformar servicios en filas */
   const dailyServices: Row[] = useMemo(() => {
     return serviceRecords
-      .filter(service => service.status !== "ENTREGADO")
+      .filter(service => service.status !== "ENTREGADO"&&
+      service.status !== "CANCELADO")
       .map(service => mapServiceToRow(service))
   }, [serviceRecords])
 
@@ -84,6 +91,21 @@ export default function HomePage() {
     const record = serviceRecords.find(r => r.id === id)
     if (record) setDelivering(record)
   }
+
+  const handleCancel = async (id: string) => {
+
+  const reason = prompt("Motivo de cancelación del servicio")
+
+  if (!reason) return
+
+  await cancelService(id, reason)
+
+  setServiceRecords(prev =>
+    prev.map(r =>
+      r.id === id ? { ...r, status: "CANCELADO" } : r
+    )
+  )
+}
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -135,10 +157,16 @@ export default function HomePage() {
           </h2>
 
           <PetsTable
-            rows={filteredServices}
-            onMarkReady={handleMarkReady}
-            onDeliver={handleDeliver}
-          />
+              rows={filteredServices}
+              onMarkReady={handleMarkReady}
+              onDeliver={handleDeliver}
+              onCancel={handleCancel}
+              onRowClick={(id) => {
+                const record = serviceRecords.find(r => r.id === id)
+                if (record) setSelectedRecord(record)
+              }}
+             
+            />
         </section>
       </main>
 
@@ -153,14 +181,14 @@ export default function HomePage() {
         <ServiceDeliveryModal
           record={delivering}
           onClose={() => setDelivering(null)}
-          onConfirm={async updated => {
+          onConfirm={async (updated: ServiceRecord & { exitObservation?: string }) =>{
             const now = new Date()
             const exitTime =
               String(now.getHours()).padStart(2, "0") +
               ":" +
               String(now.getMinutes()).padStart(2, "0")
 
-            await deliverService(updated.id, exitTime, updated.ownerSignature)
+            await deliverService(updated.id, exitTime, updated.ownerSignature, updated.metadata?.exitObservation)
 
             setServiceRecords(prev =>
               prev.filter(r => r.id !== updated.id)

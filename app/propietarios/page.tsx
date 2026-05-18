@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import type { Owner } from "@/types/owner"
 import type { Pet } from "@/types/pet"
+import { useUser } from "@/context/UserContext"
 
 import {
   getOwners,
@@ -26,6 +27,7 @@ export default function OwnersPage() {
   const [creatingPet, setCreatingPet] = useState(false)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
+  const user = useUser()
 
   /* ===============================
    * Cargar data optimizada
@@ -197,18 +199,19 @@ export default function OwnersPage() {
                     >
                       Editar
                     </button>
-
-                    <button
-                      onClick={async () => {
-                        if (confirm("¿Eliminar este propietario?")) {
-                          await deleteOwner(owner.id)
-                          location.reload()
-                        }
-                      }}
-                      className="text-red-600 hover:underline"
-                    >
-                      Eliminar
-                    </button>
+                    {user?.role === "admin" && (
+                      <button
+                        onClick={async () => {
+                          if (confirm("¿Eliminar este propietario?")) {
+                            await deleteOwner(owner.id)
+                            location.reload()
+                          }
+                        }}
+                        className="text-red-600 hover:underline"
+                      >
+                        Eliminar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

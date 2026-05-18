@@ -1,136 +1,184 @@
 "use client"
 
-import { Owner } from "@/types/owner"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import type { Owner } from "@/types/owner"
 
-interface OwnerFormProps {
-  owner: Owner
+interface Props {
+  owner?: Owner | null
   onSave: (owner: Owner) => void
   onCancel: () => void
 }
 
-export function OwnerForm({
-  owner,
-  onSave,
-  onCancel,
-}: OwnerFormProps) {
-  const router = useRouter()
-  const [form, setForm] = useState<Owner>(owner)
+const emptyOwner: Owner = {
+  id: "",
+  name: "",
+  lastName: "",
+  phone: "",
+  email: "",
+  address: "",
+  document: "",
+  birthDate: "",
+  city: "",
+  pets: []
+}
+
+export function OwnerForm({ owner, onSave, onCancel }: Props) {
+
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [form, setForm] = useState<Owner>(
+  owner ? { ...owner } : emptyOwner
+  )
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    setForm(owner)
-    setErrors({})
-  }, [owner])
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
+  const handleChange = (field: keyof Owner, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  function validate() {
-    const newErrors: Record<string, string> = {}
+  const handleSubmit = async () => {
 
-    if (!form.name.trim()) newErrors.name = "Nombre requerido"
-    if (!form.lastName.trim()) newErrors.lastName = "Apellido requerido"
-    if (!form.document.trim()) newErrors.document = "Documento requerido"
-    if (!form.phone.trim()) newErrors.phone = "Celular requerido"
+  if (saving) return
 
-    if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) {
-      newErrors.email = "Correo inválido"
-    }
+  const newErrors: Record<string, string> = {}
 
+  if (!form.name) newErrors.name = "Nombre requerido"
+  if (!form.phone) newErrors.phone = "Teléfono requerido"
+
+  if (Object.keys(newErrors).length) {
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return
   }
 
-  function handleSave() {
-    if (!validate()) return
+  setSaving(true)
+
+  try {
     onSave(form)
+  } catch (error) {
+    console.error("Error guardando propietario:", error)
+  } finally {
+    setSaving(false)
   }
+}
 
   return (
-  <div className="space-y-4">
-    <div className="grid grid-cols-2 gap-4">
-      <input
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        placeholder="Nombre"
-        className="input"
-      />
-      <input
-        name="lastName"
-        value={form.lastName}
-        onChange={handleChange}
-        placeholder="Apellido"
-        className="input"
-      />
-      <input
-        name="document"
-        value={form.document}
-        onChange={handleChange}
-        placeholder="Cédula"
-        className="input"
-      />
-      <input
-        type="date"
-        name="birthDate"
-        value={form.birthDate}
-        onChange={handleChange}
-        className="input"
-      />
-      <input
-        name="city"
-        value={form.city}
-        onChange={handleChange}
-        placeholder="Ciudad"
-        className="input"
-      />
-      <input
-        name="phone"
-        value={form.phone}
-        onChange={handleChange}
-        placeholder="Celular"
-        className="input"
-      />
-      <input
-        name="email"
-        value={form.email}
-        onChange={handleChange}
-        placeholder="Correo"
-        className="input col-span-2"
-      />
-      <input
-        name="address"
-        value={form.address}
-        onChange={handleChange}
-        placeholder="Dirección"
-        className="input col-span-2"
-      />
-      <textarea
-        name="notes"
-        value={form.notes || ""}
-        onChange={handleChange}
-        placeholder="Observaciones"
-        className="input col-span-2"
-      />
-    </div>
+    <div className="space-y-5">
 
-    <div className="flex justify-end gap-2 pt-4">
-      <button onClick={onCancel} className="px-4 py-2 border rounded">
-        Cancelar
-      </button>
-      <button
-        onClick={handleSave}
-        className="px-4 py-2 bg-amber-500 text-white rounded"
-      >
-        Guardar
-      </button>
+      {/* NOMBRE */}
+      <div className="grid md:grid-cols-2 gap-3">
+        <Input
+          label="Nombre"
+          value={form.name}
+          error={errors.name}
+          onChange={v => handleChange("name", v)}
+        />
+
+        <Input
+          label="Apellido"
+          value={form.lastName}
+          onChange={v => handleChange("lastName", v)}
+        />
+      </div>
+
+      {/* DOCUMENTO */}
+      <Input
+        label="Documento"
+        placeholder="Cédula o identificación"
+        value={form.document}
+        onChange={v => handleChange("document", v)}
+      />
+
+      {/* CONTACTO */}
+      <div className="grid md:grid-cols-2 gap-3">
+        <Input
+          label="Teléfono"
+          placeholder="Ej: 3123456789"
+          value={form.phone}
+          error={errors.phone}
+          onChange={v => handleChange("phone", v)}
+        />
+
+        <Input
+          label="Correo electrónico"
+          placeholder="opcional"
+          value={form.email}
+          onChange={v => handleChange("email", v)}
+        />
+      </div>
+
+      {/* DIRECCIÓN */}
+      <Input
+        label="Dirección"
+        placeholder="Barrio, calle, referencia"
+        value={form.address}
+        onChange={v => handleChange("address", v)}
+      />
+
+      {/* FECHA NACIMIENTO */}
+      <div>
+        <label className="text-sm font-medium text-gray-700">
+          Fecha de nacimiento
+        </label>
+        <input
+          type="date"
+          value={form.birthDate || ""}
+          onChange={e => handleChange("birthDate", e.target.value)}
+          className="w-full border rounded-lg px-3 py-2 mt-1"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Solo para registro interno y recordatorios
+        </p>
+      </div>
+
+      {/* BOTONES */}
+      <div className="flex justify-end gap-3 pt-4">
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 border rounded-lg"
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold disabled:opacity-50"
+        >
+          {saving ? "Guardando..." : "Guardar propietario"}
+        </button>
+      </div>
     </div>
-  </div>
-)
+  )
+}
+
+/* INPUT reutilizable */
+function Input({
+  label,
+  value,
+  onChange,
+  placeholder,
+  error,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  error?: string
+}) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      <input
+        value={value}
+        placeholder={placeholder}
+        onChange={e => onChange(e.target.value)}
+        className={`w-full border rounded-lg px-3 py-2 mt-1 ${
+          error ? "border-red-500" : ""
+        }`}
+      />
+      {error && (
+        <p className="text-xs text-red-500 mt-1">{error}</p>
+      )}
+    </div>
+  )
 }

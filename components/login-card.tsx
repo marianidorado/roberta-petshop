@@ -3,17 +3,34 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { login } from "@/lib/firebase/auth"
+import { FirebaseError } from "firebase/app"
 
 export default function LoginCard() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    // 🚨 Login solo visual por ahora
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError("")
+  setLoading(true)
+
+  try {
+    await login(email, password)
     router.push("/home")
+  } catch (error) {
+  if (error instanceof FirebaseError) {
+    setError("Correo o contraseña incorrectos")
+  } else {
+    setError("Error inesperado")
   }
+}
+
+  setLoading(false)
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-50 flex flex-col">
@@ -84,11 +101,15 @@ export default function LoginCard() {
             </div>
 
             <button
+              disabled={loading}
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
             >
-              Iniciar Sesión
+              {loading ? "Ingresando..." : "Iniciar Sesión"}
             </button>
+            {error && (
+                <p className="text-red-500 text-sm text-center">{error}</p>
+              )}
           </form>
         </div>
       </main>

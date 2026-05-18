@@ -2,45 +2,41 @@
 
 import { useEffect, useState } from "react"
 import type { Owner } from "@/types/owner"
-import type { Pet } from "@/types/pet"
-import { getOwners } from "@/lib/firebase/owners"
-import { getPets } from "@/lib/firebase/pets"
+import { searchOwners } from "@/lib/firebase/owners"
 
 interface SearchClientProps {
   onSelect: (owner: Owner) => void
 }
+
 export function SearchClient({ onSelect }: SearchClientProps) {
   const [query, setQuery] = useState("")
-  const [owners, setOwners] = useState<Owner[]>([])
+  const [results, setResults] = useState<Owner[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    async function loadData() {
-      const ownersDb = await getOwners()
-      const petsDb = await getPets()
+    async function fetchOwners() {
+      const search = query.trim()
 
-      // unir mascotas a cada owner
-      const ownersWithPets = ownersDb.map(owner => ({
-        ...owner,
-        pets: petsDb.filter(pet => pet.ownerId === owner.id),
-      }))
+      if (search.length < 2) {
+        setResults([])
+        return
+      }
 
-      setOwners(ownersWithPets)
+      setLoading(true)
+
+      try {
+        const data = await searchOwners(search)
+        setResults(data)
+      } catch (error) {
+        console.error("Error buscando clientes:", error)
+      }
+
+      setLoading(false)
     }
 
-    loadData()
-  }, [])
-
-  const results = owners.filter(owner => {
-    const search = query.toLowerCase()
-
-    return (
-      owner.name.toLowerCase().includes(search) ||
-      owner.document.includes(search) ||
-      owner.pets.some(pet =>
-        pet.name.toLowerCase().includes(search)
-      )
-    )
-  })
+    const timeout = setTimeout(fetchOwners, 400)
+    return () => clearTimeout(timeout)
+  }, [query])
 
   return (
     <div className="bg-white rounded-2xl shadow p-6 space-y-4">
@@ -55,7 +51,11 @@ export function SearchClient({ onSelect }: SearchClientProps) {
         className="w-full border rounded-xl px-4 py-2"
       />
 
-      {query && results.length === 0 && (
+      {loading && (
+        <p className="text-sm text-gray-500">Buscando...</p>
+      )}
+
+      {query.length >= 2 && !loading && results.length === 0 && (
         <p className="text-sm text-gray-500">
           No se encontró ningún cliente
         </p>
@@ -66,24 +66,20 @@ export function SearchClient({ onSelect }: SearchClientProps) {
           <button
             key={owner.id}
             onClick={() => onSelect(owner)}
-            className="w-full text-left p-3 rounded-xl border hover:bg-amber-50"
+            className="w-full text-left p-3 rounded-xl border hover:bg-amber-50 transition"
           >
             <p className="font-semibold">
               {owner.name} {owner.lastName}
             </p>
 
             <p className="text-sm text-gray-600">
-              {owner.document} · {owner.pets.length} mascotas
+              {owner.document}
             </p>
 
-            {owner.pets.length > 0 && (
-              <ul className="text-sm text-gray-500 mt-1 space-y-1">
-                {owner.pets.map(pet => (
-                  <li key={pet.id}>
-                    {pet.name}
-                  </li>
-                ))}
-              </ul>
+            {owner.pets && owner.pets.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1">
+                Mascotas: {owner.pets.map(p => p.name).join(", ")}
+              </p>
             )}
           </button>
         ))}

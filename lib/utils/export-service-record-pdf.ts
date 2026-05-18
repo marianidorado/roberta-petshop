@@ -22,18 +22,22 @@ export async function exportServiceRecordPDF(
 
   // 🔹 Cargar logo
   try {
-    const res = await fetch("/logo-roberta.png")
-    const blob = await res.blob()
-    const reader = new FileReader()
+  const res = await fetch("/logo-roberta.png")
+  if (!res.ok) throw new Error("Logo no encontrado")
 
-    await new Promise(resolve => {
-      reader.onloadend = () => {
-        doc.addImage(reader.result as string, "PNG", 14, 10, 24, 24)
-        resolve(true)
-      }
-      reader.readAsDataURL(blob)
-    })
-  } catch {}
+  const blob = await res.blob()
+  const reader = new FileReader()
+
+  await new Promise(resolve => {
+    reader.onloadend = () => {
+      doc.addImage(reader.result as string, "PNG", 14, 10, 24, 24)
+      resolve(true)
+    }
+    reader.readAsDataURL(blob)
+  })
+} catch (e) {
+  console.warn("No se pudo cargar el logo", e)
+}
 
   // HEADER
   doc.setFont("helvetica", "bold")
@@ -135,6 +139,15 @@ if (col !== 0) y += 6
   section("Salida")
   line("Hora salida:", record.exitTime || "Pendiente")
 
+  if (record.metadata?.exitObservation) {
+  y += 4
+  doc.text("Observación de entrega:", 18, y)
+  y += 6
+  const lines = doc.splitTextToSize(record.metadata.exitObservation, 160)
+  doc.text(lines, 18, y)
+  y += lines.length * 6
+}
+
   // Badge estado
  const statusColor: [number, number, number] =
   record.status === "ENTREGADO"
@@ -160,21 +173,26 @@ doc.setFillColor(...statusColor)
     Estado: ${record.status}
 `
 
+ try {
   const qr = await QRCode.toDataURL(qrData)
   doc.addImage(qr, "PNG", 150, y - 10, 40, 40)
+} catch (e) {
+  console.error("QR error", e)
+}
 
   y += 30
 
-  // ✍️ Firmas
-  doc.setTextColor(...dark)
+ // ✍️ Firma propietario
+doc.line(70, y, 140, y)
+doc.text("Firma del propietario", 105, y + 6, { align: "center" })
 
-  doc.line(70, y, 140, y)
-   doc.text("Firma del propietario", 105, y + 6, { align: "center" })
+if (record.ownerSignature?.startsWith("data:image")) {
 
-  if (record.ownerSignature) {
-    doc.addImage(record.ownerSignature, "PNG", 70, y - 20, 70, 20)
-  }
+  const format = record.ownerSignature.includes("png") ? "PNG" : "JPEG"
 
+  doc.addImage(record.ownerSignature, format, 70, y - 18, 70, 18)
+
+}
   // Footer
   doc.setFontSize(9)
   doc.setTextColor(...gray)
