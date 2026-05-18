@@ -101,9 +101,7 @@ export async function deliverService(
     status: "ENTREGADO",
     exitTime,
     ownerSignature: ownerSignature ?? null,
-    metadata: {
-     exitObservation: exitObservation ?? ""
-    }
+    "metadata.exitObservation": exitObservation ?? ""
   })
 }
 /* Cancelar servicio */

@@ -188,7 +188,7 @@ useEffect(() => {
               ":" +
               String(now.getMinutes()).padStart(2, "0")
 
-            await deliverService(updated.id, exitTime, updated.ownerSignature, updated.observations)
+            await deliverService(updated.id, exitTime, updated.ownerSignature, updated.metadata?.exitObservation)
 
             setServiceRecords(prev =>
               prev.filter(r => r.id !== updated.id)
